@@ -3,18 +3,33 @@
 import React, { useState } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import AdminDashboard from './AdminDashboard';
-import { Creator, Resource, TrendingPrompt } from '@/types';
+import { Creator, Resource, TrendingPrompt, Profile } from '@/types';
+import { mapCreator, mapResource } from '@/lib/mappers';
 
 interface StatsProps {
     initialCreators: Creator[];
     initialResources: Resource[];
     initialPrompts: TrendingPrompt[];
+    initialProfiles: Profile[];
+    totalClicks: number;
+    categories: any[];
+    niches: any[];
 }
 
-export default function AdminDashboardContainer({ initialCreators, initialResources, initialPrompts }: StatsProps) {
+export default function AdminDashboardContainer({
+    initialCreators,
+    initialResources,
+    initialPrompts,
+    initialProfiles,
+    totalClicks,
+    categories,
+    niches
+}: StatsProps) {
     const [creators, setCreators] = useState<Creator[]>(initialCreators);
     const [resources, setResources] = useState<Resource[]>(initialResources);
     const [prompts, setPrompts] = useState<TrendingPrompt[]>(initialPrompts);
+    const [profiles, setProfiles] = useState<Profile[]>(initialProfiles);
+
 
     const supabase = createClient();
 
@@ -170,11 +185,72 @@ export default function AdminDashboardContainer({ initialCreators, initialResour
         await supabase.from('trending_prompts').delete().eq('id', id);
     };
 
+    const handleUpdateProfile = async (id: string, updates: Partial<Profile>) => {
+        setProfiles(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p));
+        const { error } = await supabase.from('profiles').update(updates).eq('id', id);
+        if (error) {
+            console.error('Error updating profile:', error);
+            alert('Failed to update profile role.');
+        }
+    };
+
+    const handleBulkUpload = async (type: 'creators' | 'resources', data: any[]) => {
+        if (type === 'creators') {
+            const formattedData = data.map(item => ({
+                username: item.username || item.username,
+                display_name: item.display_name || item.displayName,
+                niche: item.niche,
+                bio: item.bio,
+                profile_pic: item.profile_pic || item.profilePic || '',
+                slug: item.slug || (item.display_name || item.displayName || '').toLowerCase().replace(/\s+/g, '-'),
+                is_verified: false,
+                is_hidden: false
+            }));
+
+            const { data: inserted, error } = await supabase.from('creators').insert(formattedData).select();
+            if (error) {
+                console.error('Bulk Creator Error:', error);
+                alert('Error uploading creators. View console.');
+            } else if (inserted) {
+                const mapped = inserted.map(mapCreator);
+                setCreators(prev => [...mapped, ...prev]);
+                alert(`Successfully injected ${inserted.length} creators.`);
+            }
+        } else {
+            const formattedData = data.map(item => ({
+                creator_id: item.creator_id || item.creatorId,
+                title: item.title,
+                description: item.description,
+                url: item.url,
+                category: item.category,
+                thumbnail: item.thumbnail || '',
+                status: 'pending',
+                health: 'ok',
+                tags: typeof item.tags === 'string' ? item.tags.split(',').map((t: string) => t.trim()) : (item.tags || []),
+                is_hidden: true
+            }));
+
+            const { data: inserted, error } = await supabase.from('resources').insert(formattedData).select();
+            if (error) {
+                console.error('Bulk Resource Error:', error);
+                alert('Error uploading resources. View console.');
+            } else if (inserted) {
+                const mapped = inserted.map(mapResource);
+                setResources(prev => [...mapped, ...prev]);
+                alert(`Successfully injected ${inserted.length} resources into Staging.`);
+            }
+        }
+    };
+
     return (
         <AdminDashboard
             creators={creators}
             resources={resources}
             trendingPrompts={prompts}
+            profiles={profiles}
+            totalClicks={totalClicks}
+            dbCategories={categories}
+            dbNiches={niches}
             onAddResource={handleAddResource}
             onAddCreator={handleAddCreator}
             onAddPrompt={handleAddPrompt}
@@ -184,6 +260,9 @@ export default function AdminDashboardContainer({ initialCreators, initialResour
             onUpdateResource={handleUpdateResource}
             onUpdateCreator={handleUpdateCreator}
             onUploadFile={handleUploadFile}
+            onUpdateProfile={handleUpdateProfile}
+            onBulkUpload={handleBulkUpload}
         />
     );
+
 }

@@ -40,3 +40,41 @@ export interface TrendingPrompt {
   thumbnail: string;
   model: string;
 }
+
+export interface Category {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  createdAt: string;
+}
+
+export interface Niche {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  createdAt: string;
+}
+
+export interface Bookmark {
+  id: string;
+  userId: string;
+  resourceId: string;
+  createdAt: string;
+}
+
+export interface Click {
+  id: string;
+  resourceId: string;
+  userId?: string;
+  ipHash?: string;
+  userAgent?: string;
+  createdAt: string;
+}
+export interface Profile {
+  id: string;
+  email: string | null;
+  role: 'user' | 'admin';
+  createdAt: string;
+}

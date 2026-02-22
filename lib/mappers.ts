@@ -1,4 +1,4 @@
-import { Creator, Resource, TrendingPrompt } from '@/types';
+import { Creator, Resource, TrendingPrompt, Profile } from '@/types';
 
 export function mapCreator(dbCreator: any): Creator {
     return {
@@ -43,3 +43,13 @@ export function mapTrendingPrompt(dbPrompt: any): TrendingPrompt {
         model: dbPrompt.model,
     };
 }
+
+export function mapProfile(dbProfile: any): Profile {
+    return {
+        id: dbProfile.id,
+        email: dbProfile.email,
+        role: dbProfile.role,
+        createdAt: dbProfile.created_at,
+    };
+}
+

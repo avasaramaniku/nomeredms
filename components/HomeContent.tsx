@@ -13,6 +13,7 @@ import AnoAI from './ui/animated-shader-background';
 import MobileNav from './MobileNav';
 import MobileSearchOverlay from './MobileSearchOverlay';
 import ResourceCardSkeleton from './ui/ResourceCardSkeleton';
+import CreatorCard from './CreatorCard';
 import GlassLoading from './ui/GlassLoading';
 
 import { Zap, ChevronDown, Sparkles, ArrowRight } from 'lucide-react';
@@ -24,12 +25,14 @@ interface HomeContentProps {
     initialCreators: Creator[];
     initialResources: Resource[];
     isLoggedIn: boolean;
+    launchedByParams?: boolean;
 }
 
 export default function HomeContent({
     initialCreators,
     initialResources,
-    isLoggedIn
+    isLoggedIn,
+    launchedByParams = false
 }: HomeContentProps) {
     const router = useRouter();
 
@@ -37,6 +40,20 @@ export default function HomeContent({
     const [creators] = useState<Creator[]>(initialCreators);
     const [resources] = useState<Resource[]>(initialResources);
 
+    // We maintain hasLaunched state, initializing from prop or login status
+    const [hasLaunched, setHasLaunched] = useState(launchedByParams || isLoggedIn);
+
+    // If param changes (e.g. navigation), update state
+    useEffect(() => {
+        if (launchedByParams) {
+            setHasLaunched(true);
+            setTimeout(() => {
+                document.getElementById('app-interface')?.scrollIntoView({ behavior: 'smooth' });
+            }, 100);
+        }
+    }, [launchedByParams]);
+
+    const [viewMode, setViewMode] = useState<'resources' | 'creators'>('resources');
     const [selectedCreatorSlug, setSelectedCreatorSlug] = useState<string | null>(null);
     const [selectedCategory, setSelectedCategory] = useState('All');
     const [selectedTag, setSelectedTag] = useState<string | null>(null);
@@ -46,7 +63,6 @@ export default function HomeContent({
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
     const [modalMode, setModalMode] = useState<'limit' | 'report' | 'trending'>('limit');
-    const [hasLaunched, setHasLaunched] = useState(false);
 
     // Theme state (local for now, ideally context)
     const [isDarkMode, setIsDarkMode] = useState(true);
@@ -146,7 +162,9 @@ export default function HomeContent({
                     onNavigateHome={() => router.push('/')}
                     onNavigateAdmin={() => router.push('/admin')}
                     onNavigateTrending={() => router.push('/trending')}
-                    isLoggedIn={false} // TODO: Implement real auth
+                    onNavigateFeed={() => router.push('/?launch=true')}
+                    onNavigateAuth={() => router.push('/login')}
+                    isLoggedIn={isLoggedIn}
                     isDarkMode={isDarkMode}
                     toggleDarkMode={() => setIsDarkMode(!isDarkMode)}
                 />
@@ -225,23 +243,71 @@ export default function HomeContent({
                     ) : (
                         <div id="app-interface" className="animate-in fade-in slide-in-from-bottom-6 duration-1000">
                             <div className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6">
-                                <CategoryBar selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory} />
-                                <div className="mt-12 mb-8 flex items-center justify-between">
-                                    <h2 className="text-xs font-black uppercase tracking-[0.4em] text-zinc-500">Resource Vault</h2>
-                                    <div className="h-px flex-1 mx-8 bg-zinc-100 dark:bg-zinc-800/50" />
-                                    <span className="text-[10px] font-black text-green-600 uppercase tracking-widest">Live Hub</span>
+
+                                {/* Toggle Header */}
+                                <div className="flex flex-col items-center mb-12 space-y-6">
+                                    <div className="flex items-center p-1 bg-zinc-100 dark:bg-zinc-900 rounded-full border border-zinc-200 dark:border-white/5">
+                                        <button
+                                            onClick={() => setViewMode('resources')}
+                                            className={`px-6 py-2 rounded-full text-xs font-black uppercase tracking-widest transition-all ${viewMode === 'resources'
+                                                ? 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-sm'
+                                                : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-white'
+                                                }`}
+                                        >
+                                            Resource Vault
+                                        </button>
+                                        <button
+                                            onClick={() => setViewMode('creators')}
+                                            className={`px-6 py-2 rounded-full text-xs font-black uppercase tracking-widest transition-all ${viewMode === 'creators'
+                                                ? 'bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white shadow-sm'
+                                                : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-white'
+                                                }`}
+                                        >
+                                            Creator Hub
+                                        </button>
+                                    </div>
                                 </div>
-                                <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3 pb-24">
-                                    {filteredResources.map((resource) => (
-                                        <ResourceCard
-                                            key={resource.id}
-                                            resource={resource}
-                                            creator={creators.find(c => c.id === resource.creatorId)}
-                                            onShowPaywall={handleShowModal}
-                                            onNavigateCreator={handleNavigateCreator}
-                                        />
-                                    ))}
-                                </div>
+
+                                {viewMode === 'resources' ? (
+                                    <>
+                                        <CategoryBar selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory} />
+                                        <div className="mt-12 mb-8 flex items-center justify-between">
+                                            <h2 className="text-xs font-black uppercase tracking-[0.4em] text-zinc-500">Latest Drops</h2>
+                                            <div className="h-px flex-1 mx-8 bg-zinc-100 dark:bg-zinc-800/50" />
+                                            <span className="text-[10px] font-black text-green-600 uppercase tracking-widest">Live Feed</span>
+                                        </div>
+                                        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3 pb-24">
+                                            {filteredResources.map((resource) => (
+                                                <ResourceCard
+                                                    key={resource.id}
+                                                    resource={resource}
+                                                    creator={creators.find(c => c.id === resource.creatorId)}
+                                                    onShowPaywall={handleShowModal}
+                                                    onNavigateCreator={handleNavigateCreator}
+                                                />
+                                            ))}
+                                        </div>
+                                    </>
+                                ) : (
+                                    <>
+                                        <div className="mt-4 mb-8 flex items-center justify-between">
+                                            <h2 className="text-xs font-black uppercase tracking-[0.4em] text-zinc-500">Verified Creators</h2>
+                                            <div className="h-px flex-1 mx-8 bg-zinc-100 dark:bg-zinc-800/50" />
+                                            <span className="text-[10px] font-black text-green-600 uppercase tracking-widest">{creators.length} Active</span>
+                                        </div>
+                                        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 pb-24">
+                                            {creators
+                                                .filter(c => !c.isHidden && c.displayName.toLowerCase().includes(searchTerm.toLowerCase()))
+                                                .map((creator) => (
+                                                    <CreatorCard
+                                                        key={creator.id}
+                                                        creator={creator}
+                                                        onNavigate={handleNavigateCreator}
+                                                    />
+                                                ))}
+                                        </div>
+                                    </>
+                                )}
                             </div>
                         </div>
                     )}

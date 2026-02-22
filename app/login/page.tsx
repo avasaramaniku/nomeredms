@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { createClient } from '@/utils/supabase/client';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Zap, ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
 
@@ -12,12 +12,14 @@ export default function LoginPage() {
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState<{ type: 'error' | 'success', text: string } | null>(null);
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const next = searchParams.get('next') || '/';
     const supabase = createClient();
 
     const getRedirectUrl = () => {
         // Ensure we're running in the browser
         if (typeof window !== 'undefined') {
-            return `${window.location.origin}/auth/callback`;
+            return `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`;
         }
         return '';
     };
@@ -42,20 +44,37 @@ export default function LoginPage() {
         }
     };
 
-    const handleEmailLogin = async (e: React.FormEvent) => {
+    const [isSignUp, setIsSignUp] = useState(false);
+
+    const handleEmailAuth = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
             setLoading(true);
-            const { error } = await supabase.auth.signInWithPassword({
-                email,
-                password,
-            });
-
-            if (error) {
-                setMessage({ type: 'error', text: error.message });
+            if (isSignUp) {
+                const { error } = await supabase.auth.signUp({
+                    email,
+                    password,
+                    options: {
+                        emailRedirectTo: getRedirectUrl(),
+                    }
+                });
+                if (error) {
+                    setMessage({ type: 'error', text: error.message });
+                } else {
+                    setMessage({ type: 'success', text: 'Check your email for the confirmation link!' });
+                }
             } else {
-                router.push('/');
-                router.refresh(); // Refresh server components to update auth state
+                const { error } = await supabase.auth.signInWithPassword({
+                    email,
+                    password,
+                });
+
+                if (error) {
+                    setMessage({ type: 'error', text: error.message });
+                } else {
+                    router.push(next);
+                    router.refresh();
+                }
             }
         } catch (error: any) {
             setMessage({ type: 'error', text: error.message || 'An unexpected error occurred' });
@@ -75,8 +94,12 @@ export default function LoginPage() {
                     <div className="inline-flex items-center justify-center p-4 bg-zinc-900 rounded-3xl mb-6 shadow-2xl border border-white/5">
                         <Zap className="h-10 w-10 text-white fill-current" />
                     </div>
-                    <h2 className="text-3xl font-black tracking-tighter uppercase mb-2">Welcome Back</h2>
-                    <p className="text-zinc-500 font-medium">Enter the vault of resources</p>
+                    <h2 className="text-3xl font-black tracking-tighter uppercase mb-2">
+                        {isSignUp ? 'Join the Vault' : 'Welcome Back'}
+                    </h2>
+                    <p className="text-zinc-500 font-medium">
+                        {isSignUp ? 'Create your account to access resources' : 'Enter the vault of resources'}
+                    </p>
                 </div>
 
                 <div className="bg-zinc-900/50 backdrop-blur-xl border border-white/10 rounded-[2rem] p-8 shadow-xl">
@@ -96,7 +119,7 @@ export default function LoginPage() {
                         ) : (
                             <>
                                 <img src="https://www.google.com/favicon.ico" alt="" className="h-4 w-4" />
-                                Continue with Google
+                                {isSignUp ? 'Sign up with Google' : 'Continue with Google'}
                             </>
                         )}
                     </button>
@@ -110,7 +133,7 @@ export default function LoginPage() {
                         </div>
                     </div>
 
-                    <form onSubmit={handleEmailLogin} className="space-y-4">
+                    <form onSubmit={handleEmailAuth} className="space-y-4">
                         <div>
                             <label htmlFor="email" className="sr-only">Email address</label>
                             <input
@@ -131,7 +154,7 @@ export default function LoginPage() {
                                 id="password"
                                 name="password"
                                 type="password"
-                                autoComplete="current-password"
+                                autoComplete={isSignUp ? "new-password" : "current-password"}
                                 required
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
@@ -145,9 +168,21 @@ export default function LoginPage() {
                             disabled={loading}
                             className="w-full bg-white/10 hover:bg-white/20 text-white font-bold py-4 rounded-xl border border-white/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            {loading ? 'Signing in...' : 'Sign In'}
+                            {loading ? (isSignUp ? 'Creating account...' : 'Signing in...') : (isSignUp ? 'Create Account' : 'Sign In')}
                         </button>
                     </form>
+
+                    <div className="mt-6 text-center">
+                        <button
+                            onClick={() => {
+                                setIsSignUp(!isSignUp);
+                                setMessage(null);
+                            }}
+                            className="text-xs uppercase tracking-widest text-zinc-500 hover:text-white transition-colors font-bold"
+                        >
+                            {isSignUp ? 'Already have an account? Sign In' : 'Don\'t have an account? Sign Up'}
+                        </button>
+                    </div>
                 </div>
 
                 <div className="mt-8 flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest text-zinc-600">

@@ -9,7 +9,6 @@ import {
   EyeOff,
   Eye,
   Search,
-  Terminal,
   Activity,
   AlertCircle,
   CheckCircle,
@@ -34,9 +33,14 @@ import {
   Sparkles,
   Video,
   Image as ImageIcon,
-  Send
+  Send,
+  Upload,
+  FileJson,
+  FileSpreadsheet,
+  LogOut
 } from 'lucide-react';
-import { Creator, Resource, TrendingPrompt } from '@/types';
+import Papa from 'papaparse';
+import { Creator, Resource, TrendingPrompt, Profile } from '@/types';
 import { NICHES, CATEGORIES } from '@/constants';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -44,6 +48,10 @@ interface AdminDashboardProps {
   creators: Creator[];
   resources: Resource[];
   trendingPrompts?: TrendingPrompt[];
+  profiles?: Profile[];
+  totalClicks?: number;
+  dbCategories?: any[];
+  dbNiches?: any[];
   onAddResource: (r: Partial<Resource>) => void;
   onAddCreator: (c: Partial<Creator>) => void;
   onAddPrompt?: (p: Partial<TrendingPrompt>) => void;
@@ -52,6 +60,8 @@ interface AdminDashboardProps {
   onToggleResourceVisibility: (id: string) => void;
   onUpdateResource?: (id: string, updates: Partial<Resource>) => void;
   onUpdateCreator?: (id: string, updates: Partial<Creator>) => void;
+  onUpdateProfile?: (id: string, updates: Partial<Profile>) => void;
+  onBulkUpload?: (type: 'creators' | 'resources', data: any[]) => void;
   onUploadFile?: (file: File, bucket: 'avatars' | 'thumbnails') => Promise<string | null>;
 }
 
@@ -59,6 +69,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
   creators,
   resources,
   trendingPrompts = [],
+  profiles = [],
+  totalClicks = 0,
+  dbCategories = [],
+  dbNiches = [],
   onAddResource,
   onAddCreator,
   onAddPrompt,
@@ -67,28 +81,32 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
   onToggleResourceVisibility,
   onUpdateResource,
   onUpdateCreator,
+  onUpdateProfile,
+  onBulkUpload,
   onUploadFile
 }) => {
-  const [pin, setPin] = useState('');
-  const [isAuthorized, setIsAuthorized] = useState(false);
-  const [activeTab, setActiveTab] = useState<'staging' | 'rolodex' | 'fixer' | 'manual' | 'prompts'>('staging');
+  const [activeTab, setActiveTab] = useState<'staging' | 'rolodex' | 'fixer' | 'manual' | 'prompts' | 'access' | 'bulk'>('staging');
   const [editingItem, setEditingItem] = useState<Resource | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
   // Form States
+  // Fallback to constants if DB tables are empty
+  const activeCategories = dbCategories.length > 0 ? dbCategories.map((c: any) => c.name) : CATEGORIES;
+  const activeNiches = dbNiches.length > 0 ? dbNiches.map((n: any) => n.name) : NICHES;
+
   const [newManualResource, setNewManualResource] = useState<Partial<Resource>>({
     creatorId: '',
     title: '',
     description: '',
     url: '',
-    category: 'AI Tools',
+    category: activeCategories[0] || 'AI Tools',
     tags: []
   });
 
   const [newCreator, setNewCreator] = useState({
     username: '',
     displayName: '',
-    niche: 'Tech/AI',
+    niche: activeNiches[0] || 'Tech/AI',
     bio: '',
     profilePic: ''
   });
@@ -101,10 +119,26 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
     model: ''
   });
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (pin === '1234') setIsAuthorized(true);
-    else alert('ACCESS DENIED');
+  const handleCsvUpload = (e: React.ChangeEvent<HTMLInputElement>, type: 'creators' | 'resources') => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: (results) => {
+        if (onBulkUpload) {
+          onBulkUpload(type, results.data);
+          alert(`Successfully parsed ${results.data.length} items. Uploading to database...`);
+        }
+      },
+      error: (error) => {
+        console.error('CSV Parsing Error:', error);
+        alert('Error parsing CSV file. Check console for details.');
+      }
+    });
+    // Reset input
+    e.target.value = '';
   };
 
   const processFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, bucket: 'avatars' | 'thumbnails', callback: (url: string) => void) => {
@@ -141,38 +175,32 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
     );
   }, [liveResources, searchQuery, creators]);
 
-  if (!isAuthorized) {
-    return (
-      <div className="flex min-h-[70vh] items-center justify-center px-4 font-mono">
-        <form onSubmit={handleLogin} className="w-full max-w-sm space-y-6 rounded-[2.5rem] border border-white/10 bg-neutral-900 p-12 shadow-2xl">
-          <div className="flex justify-center"><Terminal className="h-12 w-12 text-white" /></div>
-          <div className="text-center space-y-2">
-            <h2 className="text-2xl font-black tracking-tighter text-white uppercase italic">ADMIN_LOGIN</h2>
-            <p className="text-[10px] text-neutral-500 uppercase tracking-widest font-black">Secure Shell Access Required</p>
-          </div>
-          <input
-            type="password"
-            autoFocus
-            value={pin}
-            onChange={(e) => setPin(e.target.value)}
-            placeholder="••••"
-            className="w-full rounded-2xl border border-white/5 bg-black p-5 text-center text-3xl font-bold tracking-[0.5em] text-white focus:border-green-500 outline-none transition-all"
-          />
-          <button className="w-full rounded-2xl bg-white py-5 text-[10px] font-black uppercase tracking-[0.3em] text-black hover:bg-neutral-200 active:scale-95 transition-all">Connect Hub</button>
-        </form>
-      </div>
-    );
-  }
+
+
+  const handleLogout = () => {
+    document.cookie = "admin_vault_access=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    window.location.href = '/admin/login';
+  };
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 font-sans antialiased">
+      {/* Header with Logout */}
+      <div className="flex justify-end mb-8">
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-2 px-4 py-2 rounded-xl border border-red-500/20 bg-red-500/5 text-red-500 text-[10px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all"
+        >
+          <LogOut className="h-3 w-3" /> Terminate Session
+        </button>
+      </div>
+
       {/* HUD Ribbon */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
         {[
           { label: 'Pending Queue', value: pendingResources.length, color: 'text-yellow-400', icon: Activity, bg: 'bg-yellow-400/5', border: 'border-yellow-400/10' },
           { label: 'Dead Links', value: brokenCount, color: 'text-red-500', icon: AlertCircle, bg: 'bg-red-500/5', border: 'border-red-500/10' },
           { label: 'Live Assets', value: liveResources.length, color: 'text-green-500', icon: CheckCircle, bg: 'bg-green-500/5', border: 'border-green-500/10' },
-          { label: 'Viral Prompts', value: trendingPrompts.length, color: 'text-orange-400', icon: Sparkles, bg: 'bg-orange-400/5', border: 'border-orange-400/10' },
+          { label: 'Engagement', value: totalClicks, color: 'text-orange-400', icon: Activity, bg: 'bg-orange-400/5', border: 'border-orange-400/10' },
         ].map((stat, i) => (
           <div key={i} className={`rounded-[1.5rem] border ${stat.border} ${stat.bg} p-6 backdrop-blur-md`}>
             <div className="flex items-center justify-between mb-4">
@@ -192,9 +220,133 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
         <button onClick={() => setActiveTab('fixer')} className={`whitespace-nowrap px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'fixer' ? 'bg-white text-black shadow-lg shadow-white/5' : 'text-neutral-500 hover:text-white'}`}>Live Fixer</button>
         <button onClick={() => setActiveTab('prompts')} className={`whitespace-nowrap px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'prompts' ? 'bg-white text-black shadow-lg shadow-white/5' : 'text-neutral-500 hover:text-white'} flex items-center gap-2`}><Sparkles className="h-3 w-3" /> Prompt Forge</button>
         <button onClick={() => setActiveTab('manual')} className={`whitespace-nowrap px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'manual' ? 'bg-white text-black shadow-lg shadow-white/5' : 'text-neutral-500 hover:text-white'}`}>Manual</button>
+        <button onClick={() => setActiveTab('access')} className={`whitespace-nowrap px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'access' ? 'bg-white text-black shadow-lg shadow-white/5' : 'text-neutral-500 hover:text-white'} flex items-center gap-2`}><ShieldCheck className="h-3 w-3" /> Access</button>
+        <button onClick={() => setActiveTab('bulk')} className={`whitespace-nowrap px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'bulk' ? 'bg-white text-black shadow-lg shadow-white/5' : 'text-neutral-500 hover:text-white'} flex items-center gap-2`}><Upload className="h-3 w-3" /> Bulk Injector</button>
       </div>
 
       <AnimatePresence mode="wait">
+        {/* Module: Bulk Injector */}
+        {activeTab === 'bulk' && (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-12">
+            <div className="flex items-center justify-between px-2">
+              <h3 className="text-2xl font-black text-white italic uppercase tracking-tighter flex items-center gap-4">
+                Bulk System Injection
+                <span className="text-[10px] font-black text-neutral-500 border border-white/10 px-3 py-1 rounded-full uppercase tracking-widest font-mono">STAGING_V3</span>
+              </h3>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+              {/* Creators Bulk */}
+              <div className="rounded-[2.5rem] border border-white/5 bg-neutral-900/40 p-12 space-y-8 flex flex-col items-center text-center group hover:border-white/10 transition-all shadow-2xl">
+                <div className="p-8 bg-blue-500/10 rounded-[2rem] group-hover:scale-110 transition-all">
+                  <UserPlus className="h-10 w-10 text-blue-500" />
+                </div>
+                <div className="space-y-2">
+                  <h4 className="text-xl font-black text-white uppercase tracking-tight">Bulk Path: Creators</h4>
+                  <p className="text-[10px] text-neutral-500 font-black uppercase tracking-widest leading-relaxed">Inject massive creator lists via CSV.<br />Required: username, display_name, niche, bio.</p>
+                </div>
+
+                <label className="w-full flex items-center justify-center gap-4 bg-white text-black py-6 rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] hover:bg-neutral-200 transition-all cursor-pointer shadow-xl active:scale-95">
+                  <FileSpreadsheet className="h-4 w-4" /> Load Creators CSV
+                  <input type="file" accept=".csv" className="hidden" onChange={(e) => handleCsvUpload(e, 'creators')} />
+                </label>
+              </div>
+
+              {/* Resources Bulk */}
+              <div className="rounded-[2.5rem] border border-white/5 bg-neutral-900/40 p-12 space-y-8 flex flex-col items-center text-center group hover:border-white/10 transition-all shadow-2xl">
+                <div className="p-8 bg-emerald-500/10 rounded-[2rem] group-hover:scale-110 transition-all">
+                  <FilePlus className="h-10 w-10 text-emerald-500" />
+                </div>
+                <div className="space-y-2">
+                  <h4 className="text-xl font-black text-white uppercase tracking-tight">Bulk Path: Resources</h4>
+                  <p className="text-[10px] text-neutral-500 font-black uppercase tracking-widest leading-relaxed">Sync hundreds of resources instantly.<br />Required: creator_id, title, category, url.</p>
+                </div>
+
+                <label className="w-full flex items-center justify-center gap-4 bg-white text-black py-6 rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] hover:bg-neutral-200 transition-all cursor-pointer shadow-xl active:scale-95">
+                  <FileSpreadsheet className="h-4 w-4" /> Load Resources CSV
+                  <input type="file" accept=".csv" className="hidden" onChange={(e) => handleCsvUpload(e, 'resources')} />
+                </label>
+              </div>
+            </div>
+
+            <div className="rounded-3xl border border-white/5 bg-black/40 p-8 space-y-4">
+              <div className="flex items-center gap-3 text-[10px] font-black text-neutral-500 uppercase tracking-widest">
+                <AlertCircle className="h-4 w-4 text-orange-500" />
+                Injection Protocols
+              </div>
+              <ul className="grid grid-cols-1 md:grid-cols-3 gap-4 text-[9px] text-neutral-600 font-black uppercase tracking-widest">
+                <li className="p-4 bg-white/5 rounded-xl border border-white/5 flex items-center gap-3"><Check className="h-3 w-3 text-green-500" /> UTF-8 Encoded CSV</li>
+                <li className="p-4 bg-white/5 rounded-xl border border-white/5 flex items-center gap-3"><Check className="h-3 w-3 text-green-500" /> Headers matching DB columns</li>
+                <li className="p-4 bg-white/5 rounded-xl border border-white/5 flex items-center gap-3"><Check className="h-3 w-3 text-green-500" /> Auto-Staging applied (Live=False)</li>
+              </ul>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Module: Access Management */}
+        {activeTab === 'access' && (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="space-y-6">
+            <div className="flex items-center justify-between px-2">
+              <h3 className="text-2xl font-black text-white italic uppercase tracking-tighter flex items-center gap-4">
+                User Access Control
+                <span className="text-[10px] font-black text-neutral-500 border border-white/10 px-3 py-1 rounded-full uppercase tracking-widest font-mono">RBAC_CORE</span>
+              </h3>
+            </div>
+
+            <div className="rounded-[2rem] border border-white/5 bg-neutral-900/40 overflow-hidden shadow-2xl backdrop-blur-sm">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-[12px] border-collapse">
+                  <thead>
+                    <tr className="border-b border-white/5 text-neutral-500 font-black uppercase tracking-widest bg-black/40">
+                      <th className="px-8 py-5">User Email</th>
+                      <th className="px-8 py-5">Joined</th>
+                      <th className="px-8 py-5">Current Role</th>
+                      <th className="px-8 py-5 text-right">Promote/Demote</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                    {profiles.map((profile) => (
+                      <tr key={profile.id} className="hover:bg-white/[0.03] transition-colors group">
+                        <td className="px-8 py-6">
+                          <div className="font-bold text-white uppercase tracking-tight">{profile.email || 'Anonymous'}</div>
+                          <div className="text-[10px] text-neutral-500 font-mono uppercase font-black">UID: {profile.id.substring(0, 8)}...</div>
+                        </td>
+                        <td className="px-8 py-6 text-neutral-400">
+                          {new Date(profile.createdAt).toLocaleDateString()}
+                        </td>
+                        <td className="px-8 py-6">
+                          <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-tight ${profile.role === 'admin' ? 'bg-red-500/10 border border-red-500/20 text-red-500' : 'bg-blue-500/10 border border-blue-500/20 text-blue-400'}`}>
+                            {profile.role}
+                          </span>
+                        </td>
+                        <td className="px-8 py-6">
+                          <div className="flex items-center justify-end gap-3">
+                            {profile.role === 'user' ? (
+                              <button
+                                onClick={() => onUpdateProfile?.(profile.id, { role: 'admin' })}
+                                className="px-6 py-2 rounded-xl bg-red-500 text-white text-[10px] font-black uppercase tracking-widest hover:bg-red-400 transition-all shadow-lg shadow-red-500/20 flex items-center gap-2"
+                              >
+                                <ShieldCheck className="h-4 w-4" /> Make Admin
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => onUpdateProfile?.(profile.id, { role: 'user' })}
+                                className="px-6 py-2 rounded-xl bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-widest text-neutral-400 hover:text-white transition-all flex items-center gap-2"
+                              >
+                                Demote to User
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
         {/* Module: Prompts */}
         {activeTab === 'prompts' && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="grid gap-10 lg:grid-cols-[1fr_2fr]">
@@ -242,7 +394,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5">
-                    {trendingPrompts.map(p => (
+                    {trendingPrompts.map((p: TrendingPrompt) => (
                       <tr key={p.id} className="hover:bg-white/[0.02] transition-colors group">
                         <td className="px-10 py-6">
                           <img src={p.thumbnail} className="h-14 w-24 rounded-xl border border-white/10 object-cover shadow-2xl" alt="" />
@@ -592,7 +744,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
               <div className="flex items-center justify-between mb-10">
                 <div className="space-y-1">
                   <h3 className="text-3xl font-black text-white italic uppercase tracking-tighter">Asset Refinement</h3>
-                  <p className="text-[10px] text-neutral-500 uppercase font-black tracking-widest font-mono">NODE_HASH: {editingItem.id}</p>
+                  <p className="text-[10px] text-neutral-500 uppercase font-black tracking-widest font-mono">NODE_HASH: {editingItem!.id}</p>
                 </div>
                 <button onClick={() => setEditingItem(null)} className="p-3 rounded-full bg-white/5 hover:bg-white/10 text-neutral-400 transition-all"><X className="h-6 w-6" /></button>
               </div>
@@ -603,8 +755,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     <Eraser className="h-3 w-3" /> Sanitize Title
                   </label>
                   <textarea
-                    value={editingItem.title}
-                    onChange={e => setEditingItem({ ...editingItem, title: e.target.value })}
+                    value={editingItem!.title}
+                    onChange={e => setEditingItem(prev => prev ? { ...prev, title: e.target.value } : null)}
                     className="w-full bg-black border border-white/5 rounded-[1.5rem] p-6 text-sm font-bold text-white focus:border-green-500 outline-none transition-all h-24 shadow-inner"
                     placeholder="Remove scraper noise..."
                   />
@@ -615,8 +767,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     <FileText className="h-3 w-3" /> Polish Description
                   </label>
                   <textarea
-                    value={editingItem.description || ''}
-                    onChange={e => setEditingItem({ ...editingItem, description: e.target.value })}
+                    value={editingItem!.description || ''}
+                    onChange={e => setEditingItem(prev => prev ? { ...prev, description: e.target.value } : null)}
                     className="w-full bg-black border border-white/5 rounded-[1.5rem] p-6 text-sm font-bold text-white focus:border-green-500 outline-none transition-all h-32 shadow-inner"
                     placeholder="Add a detailed description for the vault..."
                   />
@@ -628,14 +780,14 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   </label>
                   <div className="space-y-2">
                     <input
-                      value={editingItem.thumbnail}
-                      onChange={e => setEditingItem({ ...editingItem, thumbnail: e.target.value })}
+                      value={editingItem!.thumbnail}
+                      onChange={e => setEditingItem(prev => prev ? { ...prev, thumbnail: e.target.value } : null)}
                       className="w-full bg-black border border-white/5 rounded-2xl p-5 text-sm font-bold text-white focus:border-green-500 outline-none transition-all shadow-inner"
                       placeholder="Image URL"
                     />
                     <div className="flex items-center gap-2">
                       <label className="flex-none p-3 bg-white/5 rounded-xl cursor-pointer hover:bg-white/10 transition-colors">
-                        <input type="file" className="hidden" accept="image/*" onChange={(e) => processFileUpload(e, 'thumbnails', (url) => setEditingItem({ ...editingItem, thumbnail: url }))} />
+                        <input type="file" className="hidden" accept="image/*" onChange={(e) => processFileUpload(e, 'thumbnails', (url) => setEditingItem(prev => prev ? { ...prev, thumbnail: url } : null))} />
                         <ImageIcon className="h-4 w-4 text-neutral-400" />
                       </label>
                       <p className="text-[10px] text-neutral-500 uppercase font-black tracking-wider">Upload New Thumbnail</p>
@@ -649,11 +801,11 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   </label>
                   <div className="flex gap-3">
                     <input
-                      value={editingItem.url}
-                      onChange={e => setEditingItem({ ...editingItem, url: e.target.value })}
+                      value={editingItem!.url}
+                      onChange={e => setEditingItem(prev => prev ? { ...prev, url: e.target.value } : null)}
                       className="flex-1 bg-black border border-white/5 rounded-xl p-5 text-xs font-bold text-white focus:border-green-500 outline-none shadow-inner"
                     />
-                    <button onClick={() => window.open(editingItem.url, '_blank')} className="px-6 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all flex items-center justify-center"><ExternalLink className="h-5 w-5" /></button>
+                    <button onClick={() => window.open(editingItem!.url, '_blank')} className="px-6 rounded-xl bg-white/5 border border-white/10 text-white hover:bg-white/10 transition-all flex items-center justify-center"><ExternalLink className="h-5 w-5" /></button>
                   </div>
                 </div>
 
@@ -663,15 +815,15 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   </label>
                   <div className="grid grid-cols-2 gap-4">
                     <select
-                      value={editingItem.category}
-                      onChange={e => setEditingItem({ ...editingItem, category: e.target.value })}
+                      value={editingItem!.category}
+                      onChange={e => setEditingItem(prev => prev ? { ...prev, category: e.target.value } : null)}
                       className="bg-black border border-white/5 rounded-xl p-5 text-[10px] font-black uppercase tracking-widest text-white focus:border-green-500 outline-none appearance-none shadow-inner"
                     >
                       {CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
                     </select>
                     <input
-                      value={editingItem.tags.join(', ')}
-                      onChange={e => setEditingItem({ ...editingItem, tags: e.target.value.split(',').map(t => t.trim()) })}
+                      value={editingItem!.tags.join(', ')}
+                      onChange={e => setEditingItem(prev => prev ? { ...prev, tags: e.target.value.split(',').map(t => t.trim()) } : null)}
                       placeholder="AI, Code, Free..."
                       className="w-full bg-black border border-white/5 rounded-xl p-5 text-xs font-bold text-white focus:border-green-500 outline-none shadow-inner"
                     />
@@ -679,10 +831,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 </div>
 
                 <div className="grid grid-cols-2 gap-5 pt-6 sticky bottom-0 bg-neutral-900 pb-2">
-                  <button onClick={() => { handleReject(editingItem.id); }} className="flex items-center justify-center gap-3 py-5 rounded-2xl border border-red-500/20 bg-red-500/5 text-red-500 text-[10px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all shadow-xl group">
+                  <button onClick={() => { handleReject(editingItem!.id); }} className="flex items-center justify-center gap-3 py-5 rounded-2xl border border-red-500/20 bg-red-500/5 text-red-500 text-[10px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all shadow-xl group">
                     <Trash2 className="h-4 w-4 group-hover:scale-110 transition-all" /> Reject & Purge
                   </button>
-                  <button onClick={() => { handleApprove(editingItem); }} className="flex items-center justify-center gap-3 py-5 rounded-2xl bg-green-500 text-black text-[10px] font-black uppercase tracking-widest hover:bg-green-400 transition-all shadow-2xl shadow-green-500/20 group">
+                  <button onClick={() => { handleApprove(editingItem!); }} className="flex items-center justify-center gap-3 py-5 rounded-2xl bg-green-500 text-black text-[10px] font-black uppercase tracking-widest hover:bg-green-400 transition-all shadow-2xl shadow-green-500/20 group">
                     <Save className="h-4 w-4 group-hover:scale-110 transition-all" /> Approve & Sync
                   </button>
                 </div>

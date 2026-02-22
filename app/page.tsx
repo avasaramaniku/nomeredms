@@ -5,7 +5,7 @@ import { mapCreator, mapResource, mapTrendingPrompt } from '@/lib/mappers';
 
 export const revalidate = 0; // Disable static optimization for now (dynamic data)
 
-export default async function Home() {
+export default async function Home({ searchParams }: { searchParams: Promise<{ launch?: string }> }) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -20,14 +20,15 @@ export default async function Home() {
 
     const creators = creatorsRaw.length > 0 ? creatorsRaw.map(mapCreator) : MOCK_CREATORS;
     const resources = resourcesRaw.length > 0 ? resourcesRaw.map(mapResource) : MOCK_RESOURCES;
-    // Removed unused prompts mapping if HomeContent doesn't use it, but logic seems cleaner to map all if available.
-    // However, prompts are unused in HomeContent now. So ignore.
+
+    const params = await searchParams;
 
     return (
         <HomeContent
             initialCreators={creators}
             initialResources={resources}
             isLoggedIn={!!user}
+            launchedByParams={params?.launch === 'true'}
         />
     );
 }

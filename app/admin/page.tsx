@@ -1,28 +1,40 @@
 import { createClient } from '@/utils/supabase/server';
 import { redirect } from 'next/navigation';
+import { cookies } from 'next/headers';
 import AdminDashboardContainer from '@/components/AdminDashboardContainer';
 import Link from 'next/link';
-import { mapCreator, mapResource, mapTrendingPrompt } from '@/lib/mappers';
+import { mapCreator, mapResource, mapTrendingPrompt, mapProfile } from '@/lib/mappers';
 
 export const revalidate = 0;
 
 export default async function AdminPage() {
     const supabase = await createClient();
 
-    const { data: { user } } = await supabase.auth.getUser();
+    const cookieStore = await cookies();
+    const isAdminAuthenticated = cookieStore.has('admin_vault_access');
 
-    // Uncomment this to enforce auth after you have a user login flow working
-    if (!user) {
-        redirect('/login');
+    // HARD FIREWALL: Ensure the separate Admin Cookie exists
+    if (!isAdminAuthenticated) {
+        redirect('/admin/login');
     }
+
+    // Now fetch system data
+
 
     const { data: creatorsData } = await supabase.from('creators').select('*');
     const { data: resourcesData } = await supabase.from('resources').select('*');
     const { data: promptsData } = await supabase.from('trending_prompts').select('*');
+    const { data: profilesData } = await supabase.from('profiles').select('*');
+    const { data: categoriesData } = await supabase.from('categories').select('*');
+    const { data: nichesData } = await supabase.from('niches').select('*');
+    const { count: clicksCount } = await supabase.from('clicks').select('*', { count: 'exact', head: true });
 
     const creators = (creatorsData || []).map(mapCreator);
     const resources = (resourcesData || []).map(mapResource);
     const prompts = (promptsData || []).map(mapTrendingPrompt);
+    const profiles = (profilesData || []).map(mapProfile);
+    const categories = categoriesData || [];
+    const niches = nichesData || [];
 
     return (
         <div className="min-h-screen bg-zinc-950 text-white">
@@ -33,7 +45,14 @@ export default async function AdminPage() {
                 initialCreators={creators}
                 initialResources={resources}
                 initialPrompts={prompts}
+                initialProfiles={profiles}
+                totalClicks={clicksCount || 0}
+                categories={categories}
+                niches={niches}
             />
         </div>
     );
+
+
+
 }

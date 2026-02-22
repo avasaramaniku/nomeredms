@@ -15,7 +15,7 @@ const MobileNav: React.FC<MobileNavProps> = ({ onOpenSearch, isLoggedIn }) => {
   const pathname = usePathname();
 
   const navItems = [
-    { id: 'home', icon: Zap, label: 'Feed', href: '/' },
+    { id: 'home', icon: Zap, label: 'Feed', href: '/?launch=true' },
     { id: 'trending', icon: Flame, label: 'Trending', href: '/trending' },
     { id: 'search', icon: Search, label: 'Search', action: onOpenSearch },
     { id: 'admin', icon: ShieldAlert, label: 'Admin', href: '/admin' },
@@ -29,7 +29,7 @@ const MobileNav: React.FC<MobileNavProps> = ({ onOpenSearch, isLoggedIn }) => {
       <div className="relative flex items-center justify-around h-20 px-4 pb-2">
         {navItems.map((item) => {
           const Icon = item.icon;
-          const isActive = item.href ? pathname === item.href : false;
+          const isActive = item.href ? pathname === item.href.split('?')[0] : false;
 
           if (item.action) {
             return (

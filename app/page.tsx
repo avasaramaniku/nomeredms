@@ -7,16 +7,13 @@ export const revalidate = 0; // Disable static optimization for now (dynamic dat
 
 export default async function Home({ searchParams }: { searchParams: Promise<{ launch?: string }> }) {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
 
-    const { data: creatorsData, error: cError } = await supabase.from('creators').select('*');
-    const { data: resourcesData, error: rError } = await supabase.from('resources').select('*');
-    const { data: promptsData, error: pError } = await supabase.from('trending_prompts').select('*');
+    const { data: creatorsData } = await supabase.from('creators').select('*');
+    const { data: resourcesData } = await supabase.from('resources').select('*');
 
     // Fallback to mocks if DB fails or is empty (safety net)
     const creatorsRaw = (creatorsData && creatorsData.length > 0) ? creatorsData : [];
     const resourcesRaw = (resourcesData && resourcesData.length > 0) ? resourcesData : [];
-    const promptsRaw = (promptsData && promptsData.length > 0) ? promptsData : [];
 
     const creators = creatorsRaw.length > 0 ? creatorsRaw.map(mapCreator) : MOCK_CREATORS;
     const resources = resourcesRaw.length > 0 ? resourcesRaw.map(mapResource) : MOCK_RESOURCES;
@@ -27,7 +24,6 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ l
         <HomeContent
             initialCreators={creators}
             initialResources={resources}
-            isLoggedIn={!!user}
             launchedByParams={params?.launch === 'true'}
         />
     );

@@ -9,7 +9,6 @@ import Image from 'next/image';
 interface ResourceCardProps {
   resource: Resource;
   creator?: Creator;
-  onShowPaywall: (mode?: 'limit' | 'report') => void;
   onNavigateCreator?: (slug: string) => void;
   onTagClick?: (tag: string) => void;
 }
@@ -17,7 +16,6 @@ interface ResourceCardProps {
 const ResourceCard = memo(({
   resource,
   creator,
-  onShowPaywall,
   onNavigateCreator,
   onTagClick
 }: ResourceCardProps) => {
@@ -37,37 +35,14 @@ const ResourceCard = memo(({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [showMenu]);
 
-  const checkAndIncrementClicks = () => {
-    const today = new Date().toLocaleDateString();
-    const lastDate = localStorage.getItem('nmd_last_click_date');
-    let clicks = parseInt(localStorage.getItem('nmd_clicks') || '0', 10);
-
-    if (lastDate !== today) {
-      clicks = 0;
-      localStorage.setItem('nmd_last_click_date', today);
-    }
-
-    if (clicks >= 3) {
-      onShowPaywall('limit');
-      return false;
-    } else {
-      localStorage.setItem('nmd_clicks', (clicks + 1).toString());
-      return true;
-    }
-  };
-
   const handleGetLink = () => {
-    if (checkAndIncrementClicks()) {
-      window.open(resource.url, '_blank');
-    }
+    window.open(resource.url, '_blank');
   };
 
   const handleCopyLink = () => {
-    if (checkAndIncrementClicks()) {
-      navigator.clipboard.writeText(resource.url);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
+    navigator.clipboard.writeText(resource.url);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   const toggleExpand = (e: React.MouseEvent) => {
@@ -125,7 +100,7 @@ const ResourceCard = memo(({
               >
                 <button
                   role="menuitem"
-                  onClick={(e) => { e.stopPropagation(); onShowPaywall('report'); setShowMenu(false); }}
+                  onClick={(e) => { e.stopPropagation(); setShowMenu(false); }}
                   className="flex w-full items-center gap-3 px-4 py-3 text-left text-xs font-bold text-zinc-500 dark:text-neutral-400 hover:bg-zinc-50 dark:hover:bg-white/5 hover:text-zinc-950 dark:hover:text-white transition-colors focus:outline-none focus:bg-zinc-100 dark:focus:bg-white/10"
                 >
                   <Flag className="h-4 w-4 text-zinc-500 dark:text-neutral-500" aria-hidden="true" /> Report Resource
@@ -214,7 +189,7 @@ const ResourceCard = memo(({
             aria-label={`Unlock and open: ${resource.title}`}
             className="group/btn relative flex flex-1 items-center justify-center gap-3 overflow-hidden rounded-xl bg-zinc-950 dark:bg-white py-3.5 text-xs font-black uppercase tracking-[0.2em] text-white dark:text-black transition-all hover:bg-zinc-800 dark:hover:bg-neutral-100 active:scale-[0.97] shadow-xl shadow-black/5 dark:shadow-white/5 focus:outline-none focus:ring-4 focus:ring-green-500/50"
           >
-            <span className="relative z-10 flex items-center gap-2">Unlock Vault <ExternalLink className="h-3.5 w-3.5 transition-transform group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5" aria-hidden="true" /></span>
+            <span className="relative z-10 flex items-center gap-2">Unlock Resource <ExternalLink className="h-3.5 w-3.5 transition-transform group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5" aria-hidden="true" /></span>
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); handleCopyLink(); }}

@@ -85,7 +85,7 @@ const LinkGateModal: React.FC<LinkGateModalProps> = ({
           {isReport
             ? 'Help us keep the community safe. Please select a reason for reporting this resource.' :
             isTrending
-              ? 'The Trending Vault contains high-value prompts and viral assets. Create a free account to unlock.'
+              ? 'The Trending Resources contains high-value prompts and viral assets. Create a free account to unlock.'
               : 'Join 5,000+ creators accessing premium tools, exclusive templates, and private coding guides.'}
         </p>
 

@@ -4,7 +4,8 @@ import React, { useState } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import AdminDashboard from './AdminDashboard';
 import { Creator, Resource, TrendingPrompt, Profile } from '@/types';
-import { mapCreator, mapResource } from '@/lib/mappers';
+import { mapCreator, mapResource, mapTrendingPrompt } from '@/lib/mappers';
+import { useEffect } from 'react';
 
 interface StatsProps {
     initialCreators: Creator[];
@@ -32,6 +33,63 @@ export default function AdminDashboardContainer({
 
 
     const supabase = createClient();
+
+    // Real-time Subscriptions for Admin (See changes from other sessions/admins)
+    useEffect(() => {
+        // Resources
+        const resourcesChannel = supabase
+            .channel('admin:resources')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'resources' }, (payload) => {
+                if (payload.eventType === 'INSERT') {
+                    const mapped = mapResource(payload.new);
+                    setResources(prev => [mapped, ...prev.filter(r => r.id !== mapped.id)]);
+                } else if (payload.eventType === 'UPDATE') {
+                    const mapped = mapResource(payload.new);
+                    setResources(prev => prev.map(r => r.id === mapped.id ? mapped : r));
+                } else if (payload.eventType === 'DELETE') {
+                    setResources(prev => prev.filter(r => r.id !== payload.old.id));
+                }
+            })
+            .subscribe();
+
+        // Creators
+        const creatorsChannel = supabase
+            .channel('admin:creators')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'creators' }, (payload) => {
+                if (payload.eventType === 'INSERT') {
+                    const mapped = mapCreator(payload.new);
+                    setCreators(prev => [mapped, ...prev.filter(c => c.id !== mapped.id)]);
+                } else if (payload.eventType === 'UPDATE') {
+                    const mapped = mapCreator(payload.new);
+                    setCreators(prev => prev.map(c => c.id === mapped.id ? mapped : c));
+                } else if (payload.eventType === 'DELETE') {
+                    setCreators(prev => prev.filter(c => c.id !== payload.old.id));
+                }
+            })
+            .subscribe();
+
+        // Prompts
+        const promptsChannel = supabase
+            .channel('admin:prompts')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'trending_prompts' }, (payload) => {
+                if (payload.eventType === 'INSERT') {
+                    const mapped = mapTrendingPrompt(payload.new);
+                    setPrompts(prev => [mapped, ...prev.filter(p => p.id !== mapped.id)]);
+                } else if (payload.eventType === 'UPDATE') {
+                    const mapped = mapTrendingPrompt(payload.new);
+                    setPrompts(prev => prev.map(p => p.id === mapped.id ? mapped : p));
+                } else if (payload.eventType === 'DELETE') {
+                    setPrompts(prev => prev.filter(p => p.id !== payload.old.id));
+                }
+            })
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(resourcesChannel);
+            supabase.removeChannel(creatorsChannel);
+            supabase.removeChannel(promptsChannel);
+        };
+    }, []);
 
     const handleUploadFile = async (file: File, bucket: 'avatars' | 'thumbnails') => {
         try {

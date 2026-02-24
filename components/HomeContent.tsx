@@ -15,6 +15,8 @@ import MobileSearchOverlay from './MobileSearchOverlay';
 import ResourceCardSkeleton from './ui/ResourceCardSkeleton';
 import CreatorCard from './CreatorCard';
 import GlassLoading from './ui/GlassLoading';
+import { createClient } from '@/utils/supabase/client';
+import { mapCreator, mapResource } from '@/lib/mappers';
 
 import { Zap, ChevronDown, Sparkles, ArrowRight } from 'lucide-react';
 import { Resource, Creator, TrendingPrompt } from '@/types';
@@ -24,24 +26,22 @@ type SortOrder = 'newest' | 'oldest' | 'title-az' | 'title-za' | 'category';
 interface HomeContentProps {
     initialCreators: Creator[];
     initialResources: Resource[];
-    isLoggedIn: boolean;
     launchedByParams?: boolean;
 }
 
 export default function HomeContent({
     initialCreators,
     initialResources,
-    isLoggedIn,
     launchedByParams = false
 }: HomeContentProps) {
     const router = useRouter();
 
     // State
-    const [creators] = useState<Creator[]>(initialCreators);
-    const [resources] = useState<Resource[]>(initialResources);
+    const [creators, setCreators] = useState<Creator[]>(initialCreators);
+    const [resources, setResources] = useState<Resource[]>(initialResources);
 
-    // We maintain hasLaunched state, initializing from prop or login status
-    const [hasLaunched, setHasLaunched] = useState(launchedByParams || isLoggedIn);
+    // Simplified launch state
+    const [hasLaunched, setHasLaunched] = useState(launchedByParams);
 
     // If param changes (e.g. navigation), update state
     useEffect(() => {
@@ -53,6 +53,56 @@ export default function HomeContent({
         }
     }, [launchedByParams]);
 
+    // Real-time Subscriptions
+    useEffect(() => {
+        const supabase = createClient();
+
+        // Subscribe to resources
+        const resourcesChannel = supabase
+            .channel('public:resources')
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'resources' },
+                (payload) => {
+                    if (payload.eventType === 'INSERT') {
+                        const newResource = mapResource(payload.new);
+                        setResources(prev => [newResource, ...prev]);
+                    } else if (payload.eventType === 'UPDATE') {
+                        const updatedResource = mapResource(payload.new);
+                        setResources(prev => prev.map(r => r.id === updatedResource.id ? updatedResource : r));
+                    } else if (payload.eventType === 'DELETE') {
+                        setResources(prev => prev.filter(r => r.id !== payload.old.id));
+                    }
+                }
+            )
+            .subscribe();
+
+        // Subscribe to creators
+        const creatorsChannel = supabase
+            .channel('public:creators')
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'creators' },
+                (payload) => {
+                    if (payload.eventType === 'INSERT') {
+                        const newCreator = mapCreator(payload.new);
+                        setCreators(prev => [newCreator, ...prev]);
+                    } else if (payload.eventType === 'UPDATE') {
+                        const updatedCreator = mapCreator(payload.new);
+                        setCreators(prev => prev.map(c => c.id === updatedCreator.id ? updatedCreator : c));
+                    } else if (payload.eventType === 'DELETE') {
+                        setCreators(prev => prev.filter(c => c.id !== payload.old.id));
+                    }
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(resourcesChannel);
+            supabase.removeChannel(creatorsChannel);
+        };
+    }, []);
+
     const [viewMode, setViewMode] = useState<'resources' | 'creators'>('resources');
     const [selectedCreatorSlug, setSelectedCreatorSlug] = useState<string | null>(null);
     const [selectedCategory, setSelectedCategory] = useState('All');
@@ -62,7 +112,7 @@ export default function HomeContent({
     const [isSortOpen, setIsSortOpen] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
-    const [modalMode, setModalMode] = useState<'limit' | 'report' | 'trending'>('limit');
+    const [modalMode, setModalMode] = useState<'report' | 'trending'>('report');
 
     // Theme state (local for now, ideally context)
     const [isDarkMode, setIsDarkMode] = useState(true);
@@ -128,7 +178,8 @@ export default function HomeContent({
     const handleLaunch = () => {
         setHasLaunched(true);
         setTimeout(() => {
-            document.getElementById('app-interface')?.scrollIntoView({ behavior: 'smooth' });
+            const el = document.getElementById('app-interface');
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
         }, 100);
     };
 
@@ -136,7 +187,7 @@ export default function HomeContent({
         router.push(`/creator/${slug}`);
     };
 
-    const handleShowModal = (mode: 'limit' | 'report' | 'trending' = 'limit') => {
+    const handleShowModal = (mode: 'report' | 'trending' = 'report') => {
         setModalMode(mode);
         setIsModalOpen(true);
     };
@@ -160,11 +211,8 @@ export default function HomeContent({
                 <Header
                     onSearch={setSearchTerm}
                     onNavigateHome={() => router.push('/')}
-                    onNavigateAdmin={() => router.push('/admin')}
                     onNavigateTrending={() => router.push('/trending')}
                     onNavigateFeed={() => router.push('/?launch=true')}
-                    onNavigateAuth={() => router.push('/login')}
-                    isLoggedIn={isLoggedIn}
                     isDarkMode={isDarkMode}
                     toggleDarkMode={() => setIsDarkMode(!isDarkMode)}
                 />
@@ -235,7 +283,7 @@ export default function HomeContent({
                                     <h2 className="text-5xl sm:text-8xl lg:text-9xl font-black tracking-tighter uppercase italic">NO MORE DMs.</h2>
                                     <p className="max-w-2xl mx-auto text-lg sm:text-2xl font-bold opacity-50 px-6">Every tool, kit, and template. One URL.</p>
                                     <motion.button onClick={handleLaunch} className="mt-12 group relative inline-flex items-center gap-4 bg-zinc-950 text-white px-10 py-5 rounded-full text-lg font-black uppercase tracking-widest shadow-2xl transition-all">
-                                        Enter The Vault <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                                        Browse Resources <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
                                     </motion.button>
                                 </motion.div>
                             </motion.section>
@@ -254,7 +302,7 @@ export default function HomeContent({
                                                 : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-white'
                                                 }`}
                                         >
-                                            Resource Vault
+                                            Resource Hub
                                         </button>
                                         <button
                                             onClick={() => setViewMode('creators')}
@@ -282,7 +330,6 @@ export default function HomeContent({
                                                     key={resource.id}
                                                     resource={resource}
                                                     creator={creators.find(c => c.id === resource.creatorId)}
-                                                    onShowPaywall={handleShowModal}
                                                     onNavigateCreator={handleNavigateCreator}
                                                 />
                                             ))}
@@ -321,9 +368,9 @@ export default function HomeContent({
                     <p className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-500">NOMOREDMS &copy; 2024</p>
                 </footer>
 
-                <MobileNav onOpenSearch={() => setIsMobileSearchOpen(true)} isLoggedIn={isLoggedIn} />
+                <MobileNav onOpenSearch={() => setIsMobileSearchOpen(true)} />
                 <MobileSearchOverlay isOpen={isMobileSearchOpen} onClose={() => setIsMobileSearchOpen(false)} onSearch={setSearchTerm} />
-                <LinkGateModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} mode={modalMode} onLogin={() => { setIsModalOpen(false); router.push('/trending'); }} />
+                <LinkGateModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} mode={modalMode} onLogin={() => { setIsModalOpen(false); }} />
             </div>
         </div>
     );

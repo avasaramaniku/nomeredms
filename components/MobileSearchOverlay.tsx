@@ -29,7 +29,7 @@ const MobileSearchOverlay: React.FC<MobileSearchOverlayProps> = ({ isOpen, onClo
     localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(updated));
   };
 
-  const filtered = SUGGESTIONS.filter(s => 
+  const filtered = SUGGESTIONS.filter(s =>
     s.label.toLowerCase().includes(query.toLowerCase())
   );
 
@@ -52,7 +52,7 @@ const MobileSearchOverlay: React.FC<MobileSearchOverlayProps> = ({ isOpen, onClo
           <div className="flex items-center justify-between mb-8">
             <div className="flex items-center gap-2">
               <Zap className="h-5 w-5 text-green-500 fill-green-500" />
-              <span className="text-sm font-black tracking-tighter text-white">SEARCH VAULT</span>
+              <span className="text-sm font-black tracking-tighter text-white">SEARCH RESOURCES</span>
             </div>
             <button onClick={onClose} className="p-2 rounded-full bg-white/5">
               <X className="h-6 w-6 text-white" />

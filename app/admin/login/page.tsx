@@ -48,7 +48,7 @@ export default function AdminPortalPage() {
 
             // 3. Success: Set Isolated Session Cookie
             const sessionValue = `ADMIN_SID_${Buffer.from(`${data.id}:${new Date().getTime()}`).toString('base64')}`;
-            document.cookie = `admin_vault_access=${sessionValue}; path=/; max-age=86400; SameSite=Strict`;
+            document.cookie = `admin_resource_access=${sessionValue}; path=/; max-age=86400; SameSite=Strict`;
 
             setMessage({ type: 'success', text: 'IDENTITY VERIFIED. Initializing Command Center...' });
 

@@ -8,10 +8,7 @@ export const revalidate = 0;
 
 export default async function TrendingPageRoot() {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
     const { data: prompts } = await supabase.from('trending_prompts').select('*');
-
     const finalPrompts = (prompts && prompts.length > 0) ? prompts : MOCK_TRENDING_PROMPTS;
 
     return (
@@ -21,7 +18,7 @@ export default async function TrendingPageRoot() {
             </Link>
 
             <TrendingLayout prompts={finalPrompts} />
-            <MobileNav isLoggedIn={!!user} />
+            <MobileNav isLoggedIn={false} />
         </div>
     );
 }

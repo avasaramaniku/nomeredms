@@ -10,8 +10,6 @@ export default async function CreatorPage({ params }: { params: Promise<{ slug: 
     const { slug } = resolvedParams;
     const supabase = await createClient();
 
-    const { data: { user } } = await supabase.auth.getUser();
-
     const { data: creatorData, error } = await supabase
         .from('creators')
         .select('*')
@@ -33,7 +31,7 @@ export default async function CreatorPage({ params }: { params: Promise<{ slug: 
     const resources = (resourcesData || []).map(mapResource);
 
     return (
-        <CreatorProfileContent creator={creator} resources={resources} isLoggedIn={!!user} />
+        <CreatorProfileContent creator={creator} initialResources={resources} />
     );
 }
 

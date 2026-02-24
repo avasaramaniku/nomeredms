@@ -8,17 +8,15 @@ import { usePathname } from 'next/navigation';
 
 interface MobileNavProps {
   onOpenSearch?: () => void;
-  isLoggedIn?: boolean;
 }
 
-const MobileNav: React.FC<MobileNavProps> = ({ onOpenSearch, isLoggedIn }) => {
+const MobileNav: React.FC<MobileNavProps> = ({ onOpenSearch }) => {
   const pathname = usePathname();
 
   const navItems = [
     { id: 'home', icon: Zap, label: 'Feed', href: '/?launch=true' },
     { id: 'trending', icon: Flame, label: 'Trending', href: '/trending' },
     { id: 'search', icon: Search, label: 'Search', action: onOpenSearch },
-    { id: 'admin', icon: ShieldAlert, label: 'Admin', href: '/admin' },
   ];
 
   return (

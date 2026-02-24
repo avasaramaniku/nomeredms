@@ -20,7 +20,7 @@ export default function Error({
                 <AlertTriangle className="h-12 w-12 text-red-500" />
             </div>
             <h2 className="text-2xl font-black text-white uppercase tracking-tighter mb-2">System Malfunction</h2>
-            <p className="text-zinc-500 mb-8 max-w-md">The vault encountered an unexpected error. Our engineers have been notified.</p>
+            <p className="text-zinc-500 mb-8 max-w-md">The system encountered an unexpected error. Our engineers have been notified.</p>
             <button
                 onClick={reset}
                 className="flex items-center gap-2 px-6 py-3 rounded-xl bg-white text-black font-bold text-sm uppercase tracking-widest hover:bg-zinc-200 transition active:scale-95"

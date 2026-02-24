@@ -11,7 +11,7 @@ export default async function AdminPage() {
     const supabase = await createClient();
 
     const cookieStore = await cookies();
-    const isAdminAuthenticated = cookieStore.has('admin_vault_access');
+    const isAdminAuthenticated = cookieStore.has('admin_resource_access');
 
     // HARD FIREWALL: Ensure the separate Admin Cookie exists
     if (!isAdminAuthenticated) {

@@ -8,7 +8,7 @@ export default function Loading() {
                     <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse"></div>
                 </div>
             </div>
-            <p className="text-zinc-500 font-mono text-xs uppercase tracking-[0.3em] font-black animate-pulse">Initializing Vault...</p>
+            <p className="text-zinc-500 font-mono text-xs uppercase tracking-[0.3em] font-black animate-pulse">Loading Resources...</p>
         </div>
     );
 }

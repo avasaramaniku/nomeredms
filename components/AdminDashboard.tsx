@@ -178,7 +178,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
 
   const handleLogout = () => {
-    document.cookie = "admin_vault_access=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    document.cookie = "admin_resource_access=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
     window.location.href = '/admin/login';
   };
 
@@ -354,7 +354,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
               <div className="rounded-[2.5rem] border border-white/10 bg-neutral-900/50 p-10 space-y-8 sticky top-32 shadow-3xl">
                 <div className="space-y-1 text-center">
                   <h3 className="text-xl font-black text-white italic uppercase tracking-tighter flex items-center justify-center gap-3"><Sparkles className="h-5 w-5 text-orange-400" /> Viral Injection</h3>
-                  <p className="text-[10px] text-neutral-500 uppercase font-black">Feed the Trending Vault.</p>
+                  <p className="text-[10px] text-neutral-500 uppercase font-black">Feed the Resource Hub.</p>
                 </div>
 
                 <div className="flex gap-2 p-1 bg-black rounded-xl border border-white/5">
@@ -420,7 +420,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       <tr>
                         <td colSpan={4} className="py-20 text-center">
                           <Sparkles className="h-10 w-10 text-neutral-700 mx-auto mb-4" />
-                          <p className="text-[10px] font-black uppercase tracking-widest text-neutral-600">Viral vault is empty.</p>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-neutral-600">Resource feed is empty.</p>
                         </td>
                       </tr>
                     )}
@@ -770,7 +770,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     value={editingItem!.description || ''}
                     onChange={e => setEditingItem(prev => prev ? { ...prev, description: e.target.value } : null)}
                     className="w-full bg-black border border-white/5 rounded-[1.5rem] p-6 text-sm font-bold text-white focus:border-green-500 outline-none transition-all h-32 shadow-inner"
-                    placeholder="Add a detailed description for the vault..."
+                    placeholder="Add a detailed description for this resource..."
                   />
                 </div>
 

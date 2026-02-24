@@ -5,8 +5,8 @@ import './globals.css';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-    title: 'No More DMs - The Creator Resource Vault',
-    description: 'Stop begging for links. Access the resource vault instantly.',
+    title: 'No More DMs - The Creator Resource Hub',
+    description: 'Stop begging for links. Access all resources instantly.',
 };
 
 export default function RootLayout({

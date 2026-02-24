@@ -7,11 +7,8 @@ import { SUGGESTIONS, TRENDING_TAGS, RECENT_SEARCHES_KEY } from '../constants';
 interface HeaderProps {
   onSearch: (term: string) => void;
   onNavigateHome: () => void;
-  onNavigateAdmin: () => void;
   onNavigateTrending: () => void;
   onNavigateFeed: () => void;
-  onNavigateAuth: () => void;
-  isLoggedIn: boolean;
   isDarkMode: boolean;
   toggleDarkMode: () => void;
 }
@@ -19,11 +16,8 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({
   onSearch,
   onNavigateHome,
-  onNavigateAdmin,
   onNavigateFeed,
   onNavigateTrending,
-  onNavigateAuth,
-  isLoggedIn,
   isDarkMode,
   toggleDarkMode
 }) => {
@@ -83,9 +77,6 @@ const Header: React.FC<HeaderProps> = ({
     localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(updated));
   };
 
-  function setViewMode(arg0: string): void {
-    throw new Error('Function not implemented.');
-  }
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-zinc-100 dark:border-white/10 bg-white/80 dark:bg-black/60 backdrop-blur-md transition-colors duration-300">
@@ -129,8 +120,8 @@ const Header: React.FC<HeaderProps> = ({
               }}
               onKeyDown={handleKeyDown}
               onFocus={() => setShowSuggestions(true)}
-              placeholder="Search vault..."
-              aria-label="Search resources in the vault"
+              placeholder="Search resources..."
+              aria-label="Search for resources"
               aria-autocomplete="list"
               aria-controls="search-suggestions"
               aria-expanded={showSuggestions}
@@ -229,21 +220,9 @@ const Header: React.FC<HeaderProps> = ({
             {isDarkMode ? <Sun className="h-4.5 w-4.5" aria-hidden="true" /> : <Moon className="h-4.5 w-4.5" aria-hidden="true" />}
           </button>
 
-          <button
-            onClick={onNavigateAdmin}
-            className="hidden lg:flex text-xs font-black uppercase tracking-widest text-zinc-500 hover:text-zinc-950 dark:hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 rounded px-1.5"
-          >
-            Admin
-          </button>
+          {/* Admin button removed from public UI */}
 
-          <button
-            onClick={onNavigateAuth}
-            className="flex items-center gap-2 rounded-full border border-zinc-200 dark:border-white/10 px-5 py-2.5 text-xs font-black uppercase tracking-widest text-zinc-950 dark:text-white transition-all hover:bg-zinc-50 dark:hover:bg-white/5 whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-green-500 shadow-sm"
-            aria-label={isLoggedIn ? 'Go to Profile' : 'Sign Up for an account'}
-          >
-            <User className="h-3.5 w-3.5" aria-hidden="true" />
-            <span className="hidden sm:inline">{isLoggedIn ? 'Profile' : 'Sign Up'}</span>
-          </button>
+          {/* Auth Button Removed */}
         </div>
       </div>
     </header>

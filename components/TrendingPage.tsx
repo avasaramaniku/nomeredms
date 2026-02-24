@@ -1,7 +1,9 @@
 'use client';
 
-import React, { useState, memo } from 'react';
+import React, { useState, memo, useEffect } from 'react';
 import { TrendingPrompt } from '@/types';
+import { createClient } from '@/utils/supabase/client';
+import { mapTrendingPrompt } from '@/lib/mappers';
 import { Copy, Check, Image as ImageIcon, Video, Sparkles } from 'lucide-react';
 
 const PromptCard = memo(({ prompt }: { prompt: TrendingPrompt }) => {
@@ -61,12 +63,41 @@ interface TrendingPageProps {
   prompts: TrendingPrompt[];
 }
 
-const TrendingPage: React.FC<TrendingPageProps> = ({ prompts }) => {
+const TrendingPage: React.FC<TrendingPageProps> = ({ prompts: initialPrompts }) => {
+  const [prompts, setPrompts] = useState<TrendingPrompt[]>(initialPrompts);
+
+  useEffect(() => {
+    const supabase = createClient();
+
+    const channel = supabase
+      .channel('public:trending_prompts')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'trending_prompts' },
+        (payload) => {
+          if (payload.eventType === 'INSERT') {
+            const newPrompt = mapTrendingPrompt(payload.new);
+            setPrompts(prev => [newPrompt, ...prev]);
+          } else if (payload.eventType === 'UPDATE') {
+            const updatedPrompt = mapTrendingPrompt(payload.new);
+            setPrompts(prev => prev.map(p => p.id === updatedPrompt.id ? updatedPrompt : p));
+          } else if (payload.eventType === 'DELETE') {
+            setPrompts(prev => prev.filter(p => p.id !== payload.old.id));
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
   return (
     <div className="animate-fade-in">
       <section className="mx-auto max-w-7xl px-4 pt-24 pb-12 sm:px-6 relative text-center">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-orange-500/20 bg-orange-500/5 backdrop-blur-sm text-[10px] font-bold uppercase tracking-[0.2em] text-orange-500 mb-8">
-          <Sparkles className="h-3 w-3" /> The Viral Vault
+          <Sparkles className="h-3 w-3" /> The Viral Resources
         </div>
         <h1 className="text-5xl font-black tracking-tighter text-zinc-950 dark:text-white sm:text-7xl mb-6">
           Trending <br />
@@ -86,7 +117,7 @@ const TrendingPage: React.FC<TrendingPageProps> = ({ prompts }) => {
           ))}
           {prompts.length === 0 && (
             <div className="col-span-full py-40 text-center">
-              <p className="text-zinc-500 font-black uppercase tracking-widest italic">The vault is currently empty. Check back later.</p>
+              <p className="text-zinc-500 font-black uppercase tracking-widest italic">The resources are currently empty. Check back later.</p>
             </div>
           )}
         </div>

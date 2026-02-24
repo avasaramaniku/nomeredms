@@ -9,27 +9,70 @@ import LinkGateModal from '@/components/LinkGateModal';
 import MobileNav from '@/components/MobileNav';
 import MobileSearchOverlay from '@/components/MobileSearchOverlay';
 import Link from 'next/link';
+import { createClient } from '@/utils/supabase/client';
+import { mapResource } from '@/lib/mappers';
+import { useEffect } from 'react';
 
 interface CreatorProfileContentProps {
     creator: Creator;
-    resources: Resource[];
-    isLoggedIn: boolean;
+    initialResources: Resource[];
 }
 
 export default function CreatorProfileContent({
     creator,
-    resources,
-    isLoggedIn
+    initialResources
 }: CreatorProfileContentProps) {
     const router = useRouter();
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [modalMode, setModalMode] = useState<'limit' | 'report' | 'trending'>('limit');
+    const [resources, setResources] = useState<Resource[]>(initialResources);
     const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
 
-    const handleShowModal = (mode: 'limit' | 'report' | 'trending' = 'limit') => {
-        setModalMode(mode);
-        setIsModalOpen(true);
-    };
+    // Real-time Subscriptions for this creator's resources
+    useEffect(() => {
+        const supabase = createClient();
+
+        const channel = supabase
+            .channel(`public:resources:creator:${creator.id}`)
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'resources',
+                    filter: `creator_id=eq.${creator.id}`
+                },
+                (payload) => {
+                    if (payload.eventType === 'INSERT') {
+                        const newResource = mapResource(payload.new);
+                        // Only add if live and not hidden
+                        if (newResource.status === 'live' && !newResource.isHidden) {
+                            setResources(prev => [newResource, ...prev]);
+                        }
+                    } else if (payload.eventType === 'UPDATE') {
+                        const updatedResource = mapResource(payload.new);
+                        if (updatedResource.status === 'live' && !updatedResource.isHidden) {
+                            setResources(prev => {
+                                const exists = prev.find(r => r.id === updatedResource.id);
+                                if (exists) {
+                                    return prev.map(r => r.id === updatedResource.id ? updatedResource : r);
+                                } else {
+                                    return [updatedResource, ...prev];
+                                }
+                            });
+                        } else {
+                            // Hide if status changed or isHidden is true
+                            setResources(prev => prev.filter(r => r.id !== updatedResource.id));
+                        }
+                    } else if (payload.eventType === 'DELETE') {
+                        setResources(prev => prev.filter(r => r.id !== payload.old.id));
+                    }
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, [creator.id]);
 
     const handleNavigateCreator = (slug: string) => {
         if (slug !== creator.slug) {
@@ -46,7 +89,6 @@ export default function CreatorProfileContent({
             <ProfileHero
                 creator={creator}
                 resources={resources}
-                onShowPaywall={handleShowModal}
             />
 
             <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6">
@@ -56,16 +98,14 @@ export default function CreatorProfileContent({
                             key={r.id}
                             resource={r}
                             creator={creator}
-                            onShowPaywall={handleShowModal}
                             onNavigateCreator={handleNavigateCreator}
                         />
                     ))}
                 </div>
             </div>
 
-            <MobileNav onOpenSearch={() => setIsMobileSearchOpen(true)} isLoggedIn={isLoggedIn} />
-            <MobileSearchOverlay isOpen={isMobileSearchOpen} onClose={() => setIsMobileSearchOpen(false)} onSearch={() => { }} /> {/* Implement search if needed */}
-            <LinkGateModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} mode={modalMode} onLogin={() => { setIsModalOpen(false); router.push('/trending'); }} />
+            <MobileNav onOpenSearch={() => setIsMobileSearchOpen(true)} />
+            <MobileSearchOverlay isOpen={isMobileSearchOpen} onClose={() => setIsMobileSearchOpen(false)} onSearch={() => { }} />
         </div>
     );
 }

@@ -95,10 +95,10 @@ export default function LoginPage() {
                         <Zap className="h-10 w-10 text-white fill-current" />
                     </div>
                     <h2 className="text-3xl font-black tracking-tighter uppercase mb-2">
-                        {isSignUp ? 'Join the Vault' : 'Welcome Back'}
+                        {isSignUp ? 'Join the Community' : 'Welcome Back'}
                     </h2>
                     <p className="text-zinc-500 font-medium">
-                        {isSignUp ? 'Create your account to access resources' : 'Enter the vault of resources'}
+                        {isSignUp ? 'Create your account to access resources' : 'Enter the resource hub'}
                     </p>
                 </div>
 

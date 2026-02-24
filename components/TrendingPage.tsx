@@ -99,13 +99,13 @@ const TrendingPage: React.FC<TrendingPageProps> = ({ prompts: initialPrompts }) 
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-orange-500/20 bg-orange-500/5 backdrop-blur-sm text-[10px] font-bold uppercase tracking-[0.2em] text-orange-500 mb-8">
           <Sparkles className="h-3 w-3" /> The Viral Resources
         </div>
-        <h1 className="text-5xl font-black tracking-tighter text-zinc-950 dark:text-white sm:text-7xl mb-6">
+        <h1 className="text-5xl font-black tracking-tighter text-white sm:text-7xl mb-6">
           Trending <br />
-          <span className="bg-gradient-to-r from-orange-400 via-zinc-900 dark:via-white to-blue-400 bg-clip-text text-transparent">
+          <span className="bg-gradient-to-r from-orange-400 via-white to-blue-400 bg-clip-text text-transparent">
             Generation Prompts
           </span>
         </h1>
-        <p className="mx-auto max-w-xl text-lg text-zinc-500 font-medium">
+        <p className="mx-auto max-w-xl text-lg text-zinc-400 font-medium">
           Behind every viral Reel is a high-performance prompt. We've decoded the best of the week.
         </p>
       </section>

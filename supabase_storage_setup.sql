@@ -6,10 +6,10 @@ values ('avatars', 'avatars', true);
 insert into storage.buckets (id, name, public)
 values ('thumbnails', 'thumbnails', true);
 
--- Policy to allow authenticated users to upload avatars
-create policy "Authenticated users can upload avatars"
+-- Policy to allow public users to upload avatars (Needed because Admin uses Custom Password)
+create policy "Public can upload avatars"
 on storage.objects for insert
-to authenticated
+to public
 with check ( bucket_id = 'avatars' );
 
 -- Policy to allow public to view avatars
@@ -18,10 +18,10 @@ on storage.objects for select
 to public
 using ( bucket_id = 'avatars' );
 
--- Policy to allow authenticated users to upload thumbnails
-create policy "Authenticated users can upload thumbnails"
+-- Policy to allow public users to upload thumbnails
+create policy "Public can upload thumbnails"
 on storage.objects for insert
-to authenticated
+to public
 with check ( bucket_id = 'thumbnails' );
 
 -- Policy to allow public to view thumbnails

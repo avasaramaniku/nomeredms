@@ -87,6 +87,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<'staging' | 'rolodex' | 'fixer' | 'manual' | 'prompts' | 'access' | 'bulk'>('staging');
   const [editingItem, setEditingItem] = useState<Resource | null>(null);
+  const [editingCreator, setEditingCreator] = useState<Creator | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
   // Form States
@@ -585,6 +586,13 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         </td>
                         <td className="px-10 py-6 text-right">
                           <button
+                            onClick={() => setEditingCreator(c)}
+                            className="p-3 rounded-xl transition-all text-neutral-500 hover:text-white bg-white/5 hover:bg-white/10 mr-2"
+                            title="Edit Creator"
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </button>
+                          <button
                             onClick={() => onUpdateCreator?.(c.id, { isHidden: !c.isHidden })}
                             className={`p-3 rounded-xl transition-all ${c.isHidden ? 'text-red-500 bg-red-500/10' : 'text-neutral-500 hover:text-white bg-white/5 hover:bg-white/10'}`}
                             title={c.isHidden ? "Unhide" : "Ghost Hide"}
@@ -860,6 +868,107 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   </button>
                   <button onClick={() => { handleApprove(editingItem!); }} className="flex items-center justify-center gap-3 py-5 rounded-2xl bg-green-500 text-black text-[10px] font-black uppercase tracking-widest hover:bg-green-400 transition-all shadow-2xl shadow-green-500/20 group">
                     <Save className="h-4 w-4 group-hover:scale-110 transition-all" /> Approve & Sync
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Edit Creator Modal */}
+      <AnimatePresence>
+        {editingCreator && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute inset-0 bg-black/95 backdrop-blur-xl" onClick={() => setEditingCreator(null)} />
+            <motion.div initial={{ opacity: 0, scale: 0.9, y: 30 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 30 }} className="relative w-full max-w-xl rounded-[3rem] border border-white/10 bg-neutral-900 p-12 shadow-3xl">
+              <div className="flex items-center justify-between mb-10">
+                <div className="space-y-1">
+                  <h3 className="text-3xl font-black text-white italic uppercase tracking-tighter">Edit Profile</h3>
+                  <p className="text-[10px] text-neutral-500 uppercase font-black tracking-widest font-mono">CREATOR_ID: {editingCreator.id}</p>
+                </div>
+                <button onClick={() => setEditingCreator(null)} className="p-3 rounded-full bg-white/5 hover:bg-white/10 text-neutral-400 transition-all"><X className="h-6 w-6" /></button>
+              </div>
+
+              <div className="space-y-8 overflow-y-auto no-scrollbar max-h-[70vh] px-2">
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-neutral-600 flex items-center gap-2">
+                    <UserPlus className="h-3 w-3" /> Basic Info
+                  </label>
+                  <div className="space-y-4">
+                    <input
+                      value={editingCreator.displayName}
+                      onChange={e => setEditingCreator(prev => prev ? { ...prev, displayName: e.target.value } : null)}
+                      className="w-full bg-black border border-white/5 rounded-2xl p-5 text-sm font-bold text-white focus:border-blue-500 outline-none transition-all shadow-inner"
+                      placeholder="Display Name"
+                    />
+                    <div className="relative">
+                      <span className="absolute left-5 top-1/2 -translate-y-1/2 text-neutral-600 font-bold italic">@</span>
+                      <input
+                        value={editingCreator.username}
+                        onChange={e => setEditingCreator(prev => prev ? { ...prev, username: e.target.value } : null)}
+                        className="w-full bg-black border border-white/5 rounded-2xl p-5 pl-10 text-sm font-bold text-white focus:border-blue-500 outline-none transition-all shadow-inner"
+                        placeholder="Handle"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-neutral-600 flex items-center gap-2">
+                    <ImageIcon className="h-3 w-3" /> Profile Picture
+                  </label>
+                  <div className="space-y-2">
+                    <input
+                      value={editingCreator.profilePic}
+                      onChange={e => setEditingCreator(prev => prev ? { ...prev, profilePic: e.target.value } : null)}
+                      className="w-full bg-black border border-white/5 rounded-2xl p-5 text-sm font-bold text-white focus:border-blue-500 outline-none transition-all shadow-inner"
+                      placeholder="Image URL"
+                    />
+                    <div className="flex items-center gap-2">
+                      <label className="flex-none p-3 bg-white/5 rounded-xl cursor-pointer hover:bg-white/10 transition-colors">
+                        <input type="file" className="hidden" accept="image/*" onChange={(e) => processFileUpload(e, 'avatars', (url) => setEditingCreator(prev => prev ? { ...prev, profilePic: url } : null))} />
+                        <ImageIcon className="h-4 w-4 text-neutral-400" />
+                      </label>
+                      <p className="text-[10px] text-neutral-500 uppercase font-black tracking-wider">Upload New Avatar</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-neutral-600 flex items-center gap-2">
+                    <Filter className="h-3 w-3" /> Classification
+                  </label>
+                  <select
+                    value={editingCreator.niche}
+                    onChange={e => setEditingCreator(prev => prev ? { ...prev, niche: e.target.value } : null)}
+                    className="w-full bg-black border border-white/5 rounded-xl p-5 text-xs font-black uppercase tracking-widest text-white focus:border-blue-500 outline-none appearance-none shadow-inner"
+                  >
+                    {NICHES.map(n => <option key={n} value={n}>{n}</option>)}
+                  </select>
+                </div>
+
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-neutral-600 flex items-center gap-2">
+                    <FileText className="h-3 w-3" /> Bio / Description
+                  </label>
+                  <textarea
+                    value={editingCreator.bio || ''}
+                    onChange={e => setEditingCreator(prev => prev ? { ...prev, bio: e.target.value } : null)}
+                    className="w-full bg-black border border-white/5 rounded-2xl p-5 text-sm font-bold text-white focus:border-blue-500 outline-none transition-all h-24 shadow-inner"
+                    placeholder="Creator biography..."
+                  />
+                </div>
+
+                <div className="pt-6 sticky bottom-0 bg-neutral-900 pb-2">
+                  <button onClick={() => {
+                    if (onUpdateCreator) {
+                      onUpdateCreator(editingCreator!.id, editingCreator!);
+                    }
+                    setEditingCreator(null);
+                  }}
+                    className="w-full flex items-center justify-center gap-3 py-5 rounded-2xl bg-blue-500 text-black text-[10px] font-black uppercase tracking-widest hover:bg-blue-400 transition-all shadow-2xl shadow-blue-500/20 group">
+                    <Save className="h-4 w-4 group-hover:scale-110 transition-all" /> Save Profile
                   </button>
                 </div>
               </div>

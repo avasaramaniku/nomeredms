@@ -252,7 +252,6 @@ export default function AdminDashboardContainer({
             alert('Error deleting creator. Check console.');
         }
     };
-
     // Prompts
     const handleAddPrompt = async (newP: Partial<TrendingPrompt>) => {
         const tempId = Math.random().toString(36).substr(2, 9);

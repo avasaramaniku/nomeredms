@@ -56,7 +56,10 @@ interface AdminDashboardProps {
   onAddCreator: (c: Partial<Creator>) => void;
   onAddPrompt?: (p: Partial<TrendingPrompt>) => void;
   onDeleteResource: (id: string) => void;
+<<<<<<< HEAD
   onDeleteCreator?: (id: string) => void;
+=======
+>>>>>>> origin/main
   onDeletePrompt?: (id: string) => void;
   onToggleResourceVisibility: (id: string) => void;
   onUpdateResource?: (id: string, updates: Partial<Resource>) => void;
@@ -78,7 +81,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
   onAddCreator,
   onAddPrompt,
   onDeleteResource,
+<<<<<<< HEAD
   onDeleteCreator,
+=======
+>>>>>>> origin/main
   onDeletePrompt,
   onToggleResourceVisibility,
   onUpdateResource,
@@ -89,7 +95,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
 }) => {
   const [activeTab, setActiveTab] = useState<'staging' | 'rolodex' | 'fixer' | 'manual' | 'prompts' | 'access' | 'bulk'>('staging');
   const [editingItem, setEditingItem] = useState<Resource | null>(null);
+<<<<<<< HEAD
   const [editingCreator, setEditingCreator] = useState<Creator | null>(null);
+=======
+>>>>>>> origin/main
   const [searchQuery, setSearchQuery] = useState('');
 
   // Form States
@@ -588,6 +597,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         </td>
                         <td className="px-10 py-6 text-right">
                           <button
+<<<<<<< HEAD
                             onClick={() => setEditingCreator(c)}
                             className="p-3 rounded-xl transition-all text-neutral-500 hover:text-white bg-white/5 hover:bg-white/10 mr-2"
                             title="Edit Creator"
@@ -595,12 +605,15 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             <Edit2 className="h-4 w-4" />
                           </button>
                           <button
+=======
+>>>>>>> origin/main
                             onClick={() => onUpdateCreator?.(c.id, { isHidden: !c.isHidden })}
                             className={`p-3 rounded-xl transition-all ${c.isHidden ? 'text-red-500 bg-red-500/10' : 'text-neutral-500 hover:text-white bg-white/5 hover:bg-white/10'}`}
                             title={c.isHidden ? "Unhide" : "Ghost Hide"}
                           >
                             {c.isHidden ? <Ban className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                           </button>
+<<<<<<< HEAD
                           <button
                             onClick={() => {
                               if (confirm(`Are you sure you want to PERMANENTLY delete creator ${c.username}? This will also orphaned their resources.`)) {
@@ -612,6 +625,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           >
                             <Trash2 className="h-4 w-4" />
                           </button>
+=======
+>>>>>>> origin/main
                         </td>
                       </tr>
                     ))}
@@ -888,6 +903,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
           </div>
         )}
       </AnimatePresence>
+<<<<<<< HEAD
 
       {/* Edit Creator Modal */}
       <AnimatePresence>
@@ -989,6 +1005,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
           </div>
         )}
       </AnimatePresence>
+=======
+>>>>>>> origin/main
     </div>
   );
 };

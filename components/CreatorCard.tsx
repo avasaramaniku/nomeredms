@@ -31,7 +31,7 @@ const CreatorCard = ({ creator, onNavigate }: CreatorCardProps) => {
                     {creator.profilePic ? (
                         <Image
                             src={creator.profilePic}
-                            alt={creator.displayName}
+                            alt={creator.displayName || 'Creator'}
                             width={96}
                             height={96}
                             className="relative h-24 w-24 rounded-full border-4 border-white dark:border-neutral-800 object-cover shadow-lg group-hover:scale-105 transition-transform duration-500"
@@ -68,7 +68,7 @@ const CreatorCard = ({ creator, onNavigate }: CreatorCardProps) => {
                 <div className="w-full pt-4 border-t border-zinc-100 dark:border-white/5 mt-2 flex items-center justify-between px-4">
                     <div className="flex items-center gap-1.5 text-zinc-500 dark:text-neutral-500">
                         <Users className="h-3.5 w-3.5" />
-                        <span className="text-xs font-bold tabular-nums">{creator.followersCount.toLocaleString()}</span>
+                        <span className="text-xs font-bold tabular-nums">{(creator.followersCount || 0).toLocaleString()}</span>
                     </div>
                     <span className="text-[10px] font-black uppercase tracking-wider text-green-500 opacity-0 group-hover:opacity-100 transition-opacity transform translate-x-2 group-hover:translate-x-0 duration-300">
                         View Profile

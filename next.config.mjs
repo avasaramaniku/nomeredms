@@ -1,8 +1,6 @@
 const nextConfig = {
     experimental: {
-        turbopack: {
-            root: '.',
-        },
+        // experimental options go here
     },
     images: {
         minimumCacheTTL: 3600,

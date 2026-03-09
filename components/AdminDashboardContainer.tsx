@@ -145,22 +145,16 @@ export default function AdminDashboardContainer({
             url: resource.url,
             status: resource.status,
             health: resource.health,
-            date: resource.date
+            is_hidden: false
         }]).select().single();
 
-
         if (data) {
-            // Replace temp ID with real ID
-            setResources(prev => prev.map(r => r.id === tempId ? { ...r, id: data.id } : r));
+            const mapped = mapResource(data);
+            setResources(prev => prev.map(r => r.id === tempId ? mapped : r));
         } else if (error) {
-            console.error('Error adding resource:', {
-                message: error.message,
-                code: error.code,
-                details: error.details,
-                hint: error.hint
-            });
-            // Revert
+            console.error('Error adding resource:', error);
             setResources(prev => prev.filter(r => r.id !== tempId));
+            alert(`Error: ${error.message}`);
         }
     };
 
@@ -207,12 +201,15 @@ export default function AdminDashboardContainer({
         setCreators(prev => [creator, ...prev]);
 
         const { data, error } = await supabase.from('creators').insert([{
-            slug: (newC.displayName || '').toLowerCase().replace(/\s+/g, '-'),
-            username: newC.username,
-            display_name: newC.displayName,
-            niche: newC.niche,
-            profile_pic: newC.profilePic,
-            bio: newC.bio
+            slug: (newC.displayName || 'new-creator').toLowerCase().replace(/\s+/g, '-'),
+            username: newC.username || 'unknown',
+            display_name: newC.displayName || 'Anonymous Creator',
+            niche: newC.niche || 'Other',
+            profile_pic: newC.profilePic || '',
+            bio: newC.bio || '',
+            is_hidden: false,
+            is_verified: false,
+            followers_count: 0
         }]).select().single();
 
         if (data) {

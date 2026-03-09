@@ -69,7 +69,7 @@ const ResourceCard = memo(({
           {resource.thumbnail ? (
             <Image
               src={resource.thumbnail}
-              alt={`Thumbnail for ${resource.title}`}
+              alt={`Thumbnail for ${resource.title || 'Resource'}`}
               fill
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               onLoad={() => setImageLoaded(true)}

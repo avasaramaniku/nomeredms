@@ -68,10 +68,29 @@ export default function HomeContent({
                 (payload) => {
                     if (payload.eventType === 'INSERT') {
                         const newResource = mapResource(payload.new);
-                        setResources(prev => [newResource, ...prev]);
+                        setResources(prev => {
+                            // Prevent duplicates and only add live items
+                            if (prev.some(r => r.id === newResource.id) || newResource.status !== 'live' || newResource.isHidden) return prev;
+
+                            // If we were showing mocks, clear them first if this is the first real item
+                            const isFirstReal = prev.some(r => typeof r.id === 'string' && r.id.startsWith('p'));
+                            const filtered = isFirstReal ? prev.filter(r => !r.id.toString().startsWith('p')) : prev;
+
+                            return [newResource, ...filtered];
+                        });
                     } else if (payload.eventType === 'UPDATE') {
                         const updatedResource = mapResource(payload.new);
-                        setResources(prev => prev.map(r => r.id === updatedResource.id ? updatedResource : r));
+                        setResources(prev => {
+                            const exists = prev.some(r => r.id === updatedResource.id);
+                            if (!exists) {
+                                // If it didn't exist but is now live, add it
+                                if (updatedResource.status === 'live' && !updatedResource.isHidden) return [updatedResource, ...prev];
+                                return prev;
+                            }
+                            // If hidden or not live, remove it
+                            if (updatedResource.status !== 'live' || updatedResource.isHidden) return prev.filter(r => r.id !== updatedResource.id);
+                            return prev.map(r => r.id === updatedResource.id ? updatedResource : r);
+                        });
                     } else if (payload.eventType === 'DELETE') {
                         setResources(prev => prev.filter(r => r.id !== payload.old.id));
                     }
@@ -88,10 +107,26 @@ export default function HomeContent({
                 (payload) => {
                     if (payload.eventType === 'INSERT') {
                         const newCreator = mapCreator(payload.new);
-                        setCreators(prev => [newCreator, ...prev]);
+                        setCreators(prev => {
+                            if (prev.some(c => c.id === newCreator.id) || newCreator.isHidden) return prev;
+
+                            // Clear mocks if needed
+                            const isShowingMocks = prev.some(c => typeof c.id === 'string' && c.id.startsWith('c'));
+                            const base = isShowingMocks ? prev.filter(c => !c.id.toString().startsWith('c')) : prev;
+
+                            return [newCreator, ...base];
+                        });
                     } else if (payload.eventType === 'UPDATE') {
                         const updatedCreator = mapCreator(payload.new);
-                        setCreators(prev => prev.map(c => c.id === updatedCreator.id ? updatedCreator : c));
+                        setCreators(prev => {
+                            const exists = prev.some(c => c.id === updatedCreator.id);
+                            if (!exists) {
+                                if (!updatedCreator.isHidden) return [updatedCreator, ...prev];
+                                return prev;
+                            }
+                            if (updatedCreator.isHidden) return prev.filter(c => c.id !== updatedCreator.id);
+                            return prev.map(c => c.id === updatedCreator.id ? updatedCreator : c);
+                        });
                     } else if (payload.eventType === 'DELETE') {
                         setCreators(prev => prev.filter(c => c.id !== payload.old.id));
                     }
@@ -157,9 +192,9 @@ export default function HomeContent({
         if (searchTerm) {
             const lower = searchTerm.toLowerCase();
             list = list.filter(r =>
-                r.title.toLowerCase().includes(lower) ||
-                r.tags.some(t => t.toLowerCase().includes(lower)) ||
-                creators.find(c => c.id === r.creatorId)?.displayName.toLowerCase().includes(lower)
+                (r.title || '').toLowerCase().includes(lower) ||
+                (r.tags || []).some(t => t.toLowerCase().includes(lower)) ||
+                creators.find(c => c.id === r.creatorId)?.displayName?.toLowerCase().includes(lower)
             );
         }
 
@@ -352,7 +387,7 @@ export default function HomeContent({
                                         </div>
                                         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 pb-24">
                                             {creators
-                                                .filter(c => !c.isHidden && c.displayName.toLowerCase().includes(searchTerm.toLowerCase()))
+                                                .filter(c => !c.isHidden && (c.displayName || '').toLowerCase().includes(searchTerm.toLowerCase()))
                                                 .map((creator) => (
                                                     <CreatorCard
                                                         key={creator.id}

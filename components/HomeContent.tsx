@@ -9,12 +9,15 @@ import Header from './Header';
 import CategoryBar from './CategoryBar';
 import ResourceCard from './ResourceCard';
 import LinkGateModal from './LinkGateModal';
-import AnoAI from './ui/animated-shader-background';
 import MobileNav from './MobileNav';
-import MobileSearchOverlay from './MobileSearchOverlay';
 import ResourceCardSkeleton from './ui/ResourceCardSkeleton';
 import CreatorCard from './CreatorCard';
 import GlassLoading from './ui/GlassLoading';
+import dynamic from 'next/dynamic';
+
+const AnoAI = dynamic(() => import('./ui/animated-shader-background'), { ssr: false });
+const MobileSearchOverlay = dynamic(() => import('./MobileSearchOverlay'), { ssr: false });
+
 import { createClient } from '@/utils/supabase/client';
 import { mapCreator, mapResource } from '@/lib/mappers';
 

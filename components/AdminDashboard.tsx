@@ -56,6 +56,7 @@ interface AdminDashboardProps {
   onAddCreator: (c: Partial<Creator>) => void;
   onAddPrompt?: (p: Partial<TrendingPrompt>) => void;
   onDeleteResource: (id: string) => void;
+  onDeleteCreator?: (id: string) => void;
   onDeletePrompt?: (id: string) => void;
   onToggleResourceVisibility: (id: string) => void;
   onUpdateResource?: (id: string, updates: Partial<Resource>) => void;
@@ -77,6 +78,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
   onAddCreator,
   onAddPrompt,
   onDeleteResource,
+  onDeleteCreator,
   onDeletePrompt,
   onToggleResourceVisibility,
   onUpdateResource,
@@ -598,6 +600,17 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             title={c.isHidden ? "Unhide" : "Ghost Hide"}
                           >
                             {c.isHidden ? <Ban className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          </button>
+                          <button
+                            onClick={() => {
+                              if (confirm(`Are you sure you want to PERMANENTLY delete creator ${c.username}? This will also orphaned their resources.`)) {
+                                onDeleteCreator?.(c.id);
+                              }
+                            }}
+                            className="p-3 rounded-xl bg-red-500/5 border border-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-all shadow-xl"
+                            title="Hard Delete Creator"
+                          >
+                            <Trash2 className="h-4 w-4" />
                           </button>
                         </td>
                       </tr>

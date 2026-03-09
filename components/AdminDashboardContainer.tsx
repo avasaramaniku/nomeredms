@@ -244,6 +244,15 @@ export default function AdminDashboardContainer({
         await supabase.from('creators').update(dbUpdates).eq('id', id);
     };
 
+    const handleDeleteCreator = async (id: string) => {
+        setCreators(prev => prev.filter(c => c.id !== id));
+        const { error } = await supabase.from('creators').delete().eq('id', id);
+        if (error) {
+            console.error('Error deleting creator:', error);
+            alert('Error deleting creator. Check console.');
+        }
+    };
+
     // Prompts
     const handleAddPrompt = async (newP: Partial<TrendingPrompt>) => {
         const tempId = Math.random().toString(36).substr(2, 9);
@@ -338,6 +347,7 @@ export default function AdminDashboardContainer({
             onAddCreator={handleAddCreator}
             onAddPrompt={handleAddPrompt}
             onDeleteResource={handleDeleteResource}
+            onDeleteCreator={handleDeleteCreator}
             onDeletePrompt={handleDeletePrompt}
             onToggleResourceVisibility={handleToggleResourceVisibility}
             onUpdateResource={handleUpdateResource}

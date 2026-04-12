@@ -8,15 +8,17 @@ interface MobileSearchOverlayProps {
   isOpen: boolean;
   onClose: () => void;
   onSearch: (term: string) => void;
+  currentSearchTerm: string;
 }
 
-const MobileSearchOverlay: React.FC<MobileSearchOverlayProps> = ({ isOpen, onClose, onSearch }) => {
-  const [query, setQuery] = useState('');
+const MobileSearchOverlay: React.FC<MobileSearchOverlayProps> = ({ isOpen, onClose, onSearch, currentSearchTerm }) => {
+  const [query, setQuery] = useState(currentSearchTerm);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (isOpen) {
+      setQuery(currentSearchTerm);
       setTimeout(() => inputRef.current?.focus(), 300);
       const stored = localStorage.getItem(RECENT_SEARCHES_KEY);
       if (stored) setRecentSearches(JSON.parse(stored));

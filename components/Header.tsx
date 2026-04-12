@@ -1,10 +1,12 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Link from 'next/link';
 import { Search, Zap, User, Flame, Sun, Moon, Clock, TrendingUp, X } from 'lucide-react';
 import { SUGGESTIONS, TRENDING_TAGS, RECENT_SEARCHES_KEY } from '../constants';
 
 interface HeaderProps {
+  currentSearchTerm: string;
   onSearch: (term: string) => void;
   onNavigateHome: () => void;
   onNavigateTrending: () => void;
@@ -14,6 +16,7 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({
+  currentSearchTerm,
   onSearch,
   onNavigateHome,
   onNavigateFeed,
@@ -21,7 +24,6 @@ const Header: React.FC<HeaderProps> = ({
   isDarkMode,
   toggleDarkMode
 }) => {
-  const [searchTerm, setSearchTerm] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -39,7 +41,7 @@ const Header: React.FC<HeaderProps> = ({
   };
 
   const filteredSuggestions = SUGGESTIONS.filter(s =>
-    s.label.toLowerCase().includes(searchTerm.toLowerCase())
+    s.label.toLowerCase().includes(currentSearchTerm.toLowerCase())
   );
 
   useEffect(() => {
@@ -54,8 +56,8 @@ const Header: React.FC<HeaderProps> = ({
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      onSearch(searchTerm);
-      saveSearch(searchTerm);
+      onSearch(currentSearchTerm);
+      saveSearch(currentSearchTerm);
       setShowSuggestions(false);
     }
     if (e.key === 'Escape') {
@@ -66,7 +68,6 @@ const Header: React.FC<HeaderProps> = ({
   const handleSelectSuggestion = (label: string) => {
     onSearch(label);
     saveSearch(label);
-    setSearchTerm('');
     setShowSuggestions(false);
   };
 
@@ -113,9 +114,10 @@ const Header: React.FC<HeaderProps> = ({
             <Search className="absolute left-4 h-4 w-4 text-zinc-500" aria-hidden="true" />
             <input
               type="text"
-              value={searchTerm}
+              value={currentSearchTerm}
               onChange={(e) => {
-                setSearchTerm(e.target.value);
+                const value = e.target.value;
+                onSearch(value); // Enable live search
                 setShowSuggestions(true);
               }}
               onKeyDown={handleKeyDown}
@@ -140,7 +142,7 @@ const Header: React.FC<HeaderProps> = ({
                 className="absolute top-full mt-2 w-full overflow-hidden rounded-2xl border border-zinc-100 dark:border-white/10 bg-white/95 dark:bg-neutral-950/95 backdrop-blur-xl py-2 shadow-[0_20px_50px_rgba(0,0,0,0.2)] z-[60]"
               >
                 {/* Case 1: Search term present */}
-                {searchTerm && (
+                {currentSearchTerm && (
                   <div className="py-1">
                     <div className="px-4 py-2 text-[10px] font-black uppercase tracking-widest text-zinc-400">Suggestions</div>
                     {filteredSuggestions.length > 0 ? (
@@ -162,7 +164,7 @@ const Header: React.FC<HeaderProps> = ({
                 )}
 
                 {/* Case 2: Empty search - Show Recent & Trending */}
-                {!searchTerm && (
+                {!currentSearchTerm && (
                   <>
                     {recentSearches.length > 0 && (
                       <div className="py-1 border-b border-zinc-100 dark:border-white/5">
@@ -220,9 +222,21 @@ const Header: React.FC<HeaderProps> = ({
             {isDarkMode ? <Sun className="h-4.5 w-4.5" aria-hidden="true" /> : <Moon className="h-4.5 w-4.5" aria-hidden="true" />}
           </button>
 
-          {/* Admin button removed from public UI */}
+          <Link
+            href="/creator-login"
+            className="hidden sm:flex items-center gap-2 bg-zinc-950 dark:bg-white text-white dark:text-black px-5 py-2.5 rounded-full text-xs font-black uppercase tracking-widest hover:scale-105 active:scale-95 transition-all shadow-lg shadow-green-500/10"
+          >
+            <User className="h-3.5 w-3.5" />
+            Join as Creator
+          </Link>
 
-          {/* Auth Button Removed */}
+          {/* Mobile version of the button */}
+          <Link
+            href="/creator-login"
+            className="sm:hidden p-2.5 rounded-full bg-zinc-950 dark:bg-white text-white dark:text-black transition-all active:scale-90"
+          >
+            <User className="h-4.5 w-4.5" />
+          </Link>
         </div>
       </div>
     </header>

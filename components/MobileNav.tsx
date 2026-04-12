@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Zap, Flame, Search, ShieldAlert } from 'lucide-react';
+import { Zap, Flame, Search, User } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
@@ -16,6 +16,7 @@ const MobileNav: React.FC<MobileNavProps> = ({ onOpenSearch }) => {
   const navItems = [
     { id: 'home', icon: Zap, label: 'Feed', href: '/?launch=true' },
     { id: 'trending', icon: Flame, label: 'Trending', href: '/trending' },
+    { id: 'creators', icon: User, label: 'Creators', href: '/creator-login' },
     { id: 'search', icon: Search, label: 'Search', action: onOpenSearch },
   ];
 

@@ -202,10 +202,34 @@ export default function HomeContent({
 
             <div className="relative z-10 flex flex-col min-h-screen">
                 <Header
-                    onSearch={setSearchTerm}
-                    onNavigateHome={() => router.push('/')}
+                    currentSearchTerm={searchTerm}
+                    onSearch={(term) => {
+                        setSearchTerm(term);
+                        if (!hasLaunched) {
+                            handleLaunch();
+                        } else {
+                            // Only scroll if we are very far from the interface or if the term just became non-empty
+                            const interfaceEl = document.getElementById('app-interface');
+                            if (interfaceEl) {
+                                const rect = interfaceEl.getBoundingClientRect();
+                                if (rect.top > window.innerHeight || rect.bottom < 0) {
+                                    interfaceEl.scrollIntoView({ behavior: 'smooth' });
+                                }
+                            }
+                        }
+                    }}
+                    onNavigateHome={() => {
+                        setHasLaunched(false);
+                        setSearchTerm('');
+                        router.push('/');
+                    }}
                     onNavigateTrending={() => router.push('/trending')}
-                    onNavigateFeed={() => router.push('/?launch=true')}
+                    onNavigateFeed={() => {
+                        setHasLaunched(true);
+                        setTimeout(() => {
+                            document.getElementById('app-interface')?.scrollIntoView({ behavior: 'smooth' });
+                        }, 100);
+                    }}
                     isDarkMode={isDarkMode}
                     toggleDarkMode={() => setIsDarkMode(!isDarkMode)}
                 />
@@ -332,6 +356,11 @@ export default function HomeContent({
                                                     onNavigateCreator={handleNavigateCreator}
                                                 />
                                             ))}
+                                            {filteredResources.length === 0 && (
+                                                <div className="col-span-full py-20 text-center">
+                                                    <p className="text-zinc-500 font-bold uppercase tracking-widest">No resources found matching your search.</p>
+                                                </div>
+                                            )}
                                         </div>
                                     </>
                                 ) : (
@@ -343,7 +372,17 @@ export default function HomeContent({
                                         </div>
                                         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 pb-24">
                                             {creators
-                                                .filter(c => !c.isHidden && (c.displayName || '').toLowerCase().includes(searchTerm.toLowerCase()))
+                                                .filter(c => {
+                                                    if (c.isHidden) return false;
+                                                    if (!searchTerm) return true;
+                                                    const lower = searchTerm.toLowerCase();
+                                                    return (
+                                                        (c.displayName || '').toLowerCase().includes(lower) ||
+                                                        (c.username || '').toLowerCase().includes(lower) ||
+                                                        (c.bio || '').toLowerCase().includes(lower) ||
+                                                        (c.niche || '').toLowerCase().includes(lower)
+                                                    );
+                                                })
                                                 .map((creator) => (
                                                     <CreatorCard
                                                         key={creator.id}
@@ -355,20 +394,86 @@ export default function HomeContent({
                                     </>
                                 )}
                             </div>
+
+                            {/* Q&A / How It Works Section */}
+                            <section className="py-32 bg-white dark:bg-zinc-950 border-t border-zinc-100 dark:border-white/5">
+                                <div className="max-w-7xl mx-auto px-4 sm:px-6">
+                                    <div className="flex flex-col lg:flex-row gap-20">
+                                        <div className="lg:w-1/3">
+                                            <div className="sticky top-32">
+                                                <div className="flex items-center gap-2 px-4 py-1.5 rounded-full border border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-white/5 backdrop-blur-md text-[10px] font-black uppercase tracking-[0.2em] text-green-600 mb-8 w-fit shadow-sm">
+                                                    How it Works
+                                                </div>
+                                                <h2 className="text-5xl lg:text-7xl font-black tracking-tighter uppercase mb-6 leading-[0.85]">
+                                                    FREQUENTLY <br />
+                                                    <span className="text-zinc-300 dark:text-zinc-800">ASKED.</span>
+                                                </h2>
+                                                <p className="text-zinc-500 font-bold uppercase tracking-[0.2em] text-xs">Everything you need to know about the new era of creator distribution.</p>
+                                            </div>
+                                        </div>
+
+                                        <div className="lg:w-2/3 grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-16">
+                                            {[
+                                                {
+                                                    q: "What exactly is NOMOREDMS?",
+                                                    a: "A streamlined distribution hub for top-tier creators. Instead of manually replying to 'Link?' DMs, you provide a single, professional source for your audience to find everything instantly."
+                                                },
+                                                {
+                                                    q: "How do creators get verified?",
+                                                    a: "Verification is earned through consistency, original work, and maintaining high 'Resource Health' scores. We prioritize quality over quantity."
+                                                },
+                                                {
+                                                    q: "Is it really free for everyone?",
+                                                    a: "Yes. NOMOREDMS is built to empower creators. Whether you share 5 kits or 500, our core hub remains accessible for all approved creators."
+                                                },
+                                                {
+                                                    q: "What is a 'Link Gate'?",
+                                                    a: "A strategic tool. You can require users to 'Follow' or 'Join' a list before accessing a resource, turning a simple download into a long-term fan connection."
+                                                },
+                                                {
+                                                    q: "How do I claim my own hub?",
+                                                    a: "Click 'Join as Creator' in the header. Once approved, you'll get a professional /creator/slug that acts as your centralized resource portfolio."
+                                                },
+                                                {
+                                                    q: "Is my data secure?",
+                                                    a: "We use enterprise-grade Supabase encryption and row-level security. Your assets and your audience's trust are our highest priorities."
+                                                }
+                                            ].map((item, idx) => (
+                                                <div key={idx} className="group border-b border-zinc-100 dark:border-white/5 pb-12 last:border-0">
+                                                    <h3 className="text-lg font-black uppercase tracking-tighter mb-4 group-hover:text-green-500 transition-colors">
+                                                        {item.q}
+                                                    </h3>
+                                                    <p className="text-zinc-500 font-medium leading-relaxed dark:text-zinc-400">
+                                                        {item.a}
+                                                    </p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
                         </div>
                     )}
                 </main>
 
-                <footer className="hidden md:block border-t border-zinc-100 dark:border-white/5 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl py-20 text-center">
-                    <Link href="/" className="mb-8 inline-flex items-center gap-3 group">
-                        <Zap className="h-6 w-6 text-zinc-950 dark:text-white fill-current" />
-                        <span className="text-xl font-black tracking-tighter uppercase">NOMOREDMS</span>
+                <footer className="hidden md:block border-t border-zinc-100 dark:border-white/5 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl py-24 text-center">
+                    <Link href="/" className="mb-12 inline-flex items-center gap-3 group" onClick={() => { setHasLaunched(false); setSearchTerm(''); }}>
+                        <Zap className="h-8 w-8 text-zinc-950 dark:text-white fill-current" />
+                        <span className="text-3xl font-black tracking-tighter uppercase whitespace-nowrap">NOMOREDMS</span>
                     </Link>
-                    <p className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-500">NOMOREDMS &copy; 2024</p>
+                    
+                    <div className="flex justify-center gap-12 mb-12 text-[10px] font-black uppercase tracking-[0.2em] text-zinc-500">
+                        <Link href="/blog" className="hover:text-zinc-950 dark:hover:text-white transition-all">Blog</Link>
+                        <Link href="/privacy-policy" className="hover:text-zinc-950 dark:hover:text-white transition-all">Privacy Policy</Link>
+                        <Link href="/terms-of-service" className="hover:text-zinc-950 dark:hover:text-white transition-all">Terms of Service</Link>
+                        <Link href="/creator-login" className="hover:text-zinc-950 dark:hover:text-white transition-all text-green-600">Creator Hub</Link>
+                    </div>
+
+                    <p className="text-[10px] font-black uppercase tracking-[0.4em] text-zinc-400">NOMOREDMS &copy; 2024</p>
                 </footer>
 
                 <MobileNav onOpenSearch={() => setIsMobileSearchOpen(true)} />
-                <MobileSearchOverlay isOpen={isMobileSearchOpen} onClose={() => setIsMobileSearchOpen(false)} onSearch={setSearchTerm} />
+                <MobileSearchOverlay isOpen={isMobileSearchOpen} onClose={() => setIsMobileSearchOpen(false)} onSearch={setSearchTerm} currentSearchTerm={searchTerm} />
                 <LinkGateModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} mode={modalMode} onLogin={() => { setIsModalOpen(false); }} />
             </div>
         </div>

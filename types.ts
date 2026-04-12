@@ -82,3 +82,17 @@ export interface Profile {
   role: 'user' | 'admin';
   createdAt: string;
 }
+
+export interface BlogPost {
+  id: string;
+  title: string;
+  slug: string;
+  content: string;
+  excerpt?: string;
+  authorId?: string;
+  category: string;
+  thumbnailUrl?: string;
+  isPublished: boolean;
+  publishedAt: string | null;
+  createdAt: string;
+}

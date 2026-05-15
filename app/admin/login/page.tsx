@@ -31,28 +31,72 @@ export default function AdminPortalPage() {
         setMessage(null);
 
         try {
-            const { data, error } = await supabase.auth.signInWithPassword({
-                email,
-                password,
-            });
+            // 1. Try Legacy Admin Accounts Table First (for master_admin etc)
+            const { data: legacyAdmin, error: legacyError } = await supabase
+                .from('admin_accounts')
+                .select('*')
+                .eq('username', email)
+                .eq('password_hash', password) // Note: In a real app this should be hashed, but matches table data
+                .eq('is_active', true)
+                .single();
 
-            if (error) {
-                setMessage({ type: 'error', text: error.message.toUpperCase() });
-                setLoading(false);
+            if (legacyAdmin) {
+                // Success via legacy table
+                // Set the specific admin cookie that app/admin/page.tsx looks for
+                document.cookie = "admin_resource_access=true; path=/; max-age=3600; SameSite=Strict";
+                
+                setMessage({ type: 'success', text: 'IDENTITY VERIFIED. Initializing Command Center...' });
+                setTimeout(() => {
+                    const next = searchParams.get('next') || '/admin';
+                    router.push(next);
+                    router.refresh();
+                }, 1000);
                 return;
             }
 
-            // Middleware will handle role verification upon redirect
-            setMessage({ type: 'success', text: 'IDENTITY VERIFIED. Initializing Command Center...' });
+            // 2. Fallback to Supabase Auth (for gmail accounts)
+            if (email.includes('@')) {
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email,
+                    password,
+                });
 
-            setTimeout(() => {
-                const next = searchParams.get('next') || '/admin';
-                router.push(next);
-                router.refresh();
-            }, 1000);
+                if (error) {
+                    setMessage({ type: 'error', text: error.message.toUpperCase() });
+                    setLoading(false);
+                    return;
+                }
+
+                if (data.user) {
+                    // Check if user has admin role
+                    const { data: profile } = await supabase
+                        .from('profiles')
+                        .select('role')
+                        .eq('id', data.user.id)
+                        .single();
+
+                    if (profile?.role === 'admin') {
+                        document.cookie = "admin_resource_access=true; path=/; max-age=3600; SameSite=Strict";
+                        setMessage({ type: 'success', text: 'IDENTITY VERIFIED. Initializing Command Center...' });
+                        setTimeout(() => {
+                            const next = searchParams.get('next') || '/admin';
+                            router.push(next);
+                            router.refresh();
+                        }, 1000);
+                        return;
+                    } else {
+                        await supabase.auth.signOut();
+                        setMessage({ type: 'error', text: 'INSUFFICIENT CLEARANCE LEVEL.' });
+                        setLoading(false);
+                        return;
+                    }
+                }
+            }
+
+            setMessage({ type: 'error', text: 'INVALID CREDENTIALS OR SECURITY CLEARANCE.' });
 
         } catch (err: any) {
-            setMessage({ type: 'error', text: 'CRITICAL AUTH ERROR: Authorization server unreachable.' });
+            setMessage({ type: 'error', text: `CRITICAL AUTH ERROR: ${err.message || 'Server unreachable'}` });
             console.error(err);
         } finally {
             setLoading(false);

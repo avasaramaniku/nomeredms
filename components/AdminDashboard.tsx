@@ -242,16 +242,18 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
       </div>
 
       {/* Module Switcher */}
-      <div className="flex items-center gap-2 rounded-2xl bg-neutral-900 p-2 mb-12 w-fit border border-white/5 mx-auto overflow-x-auto no-scrollbar">
-        <button onClick={() => setActiveTab('staging')} className={`whitespace-nowrap px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'staging' ? 'bg-white text-black shadow-lg shadow-white/5' : 'text-neutral-500 hover:text-white'}`}>Triage</button>
-        <button onClick={() => setActiveTab('rolodex')} className={`whitespace-nowrap px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'rolodex' ? 'bg-white text-black shadow-lg shadow-white/5' : 'text-neutral-500 hover:text-white'}`}>Creators</button>
-        <button onClick={() => setActiveTab('fixer')} className={`whitespace-nowrap px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'fixer' ? 'bg-white text-black shadow-lg shadow-white/5' : 'text-neutral-500 hover:text-white'}`}>Live Fixer</button>
-        <button onClick={() => setActiveTab('prompts')} className={`whitespace-nowrap px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'prompts' ? 'bg-white text-black shadow-lg shadow-white/5' : 'text-neutral-500 hover:text-white'} flex items-center gap-2`}><Sparkles className="h-3 w-3" /> Prompt Forge</button>
-        <button onClick={() => setActiveTab('taxonomy')} className={`whitespace-nowrap px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'taxonomy' ? 'bg-white text-black shadow-lg shadow-white/5' : 'text-neutral-500 hover:text-white'} flex items-center gap-2`}><Database className="h-3 w-3" /> Taxonomy</button>
-        <button onClick={() => setActiveTab('manual')} className={`whitespace-nowrap px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'manual' ? 'bg-white text-black shadow-lg shadow-white/5' : 'text-neutral-500 hover:text-white'}`}>Manual</button>
-        <button onClick={() => setActiveTab('access')} className={`whitespace-nowrap px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'access' ? 'bg-white text-black shadow-lg shadow-white/5' : 'text-neutral-500 hover:text-white'} flex items-center gap-2`}><ShieldCheck className="h-3 w-3" /> Access</button>
-        <button onClick={() => setActiveTab('bulk')} className={`whitespace-nowrap px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'bulk' ? 'bg-white text-black shadow-lg shadow-white/5' : 'text-neutral-500 hover:text-white'} flex items-center gap-2`}><Upload className="h-3 w-3" /> Bulk Injector</button>
-        <button onClick={() => setActiveTab('audit')} className={`whitespace-nowrap px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'audit' ? 'bg-white text-black shadow-lg shadow-white/5' : 'text-neutral-500 hover:text-white'} flex items-center gap-2`}><History className="h-3 w-3" /> Audit Logs</button>
+      <div className="w-full overflow-x-auto no-scrollbar mb-12">
+        <div className="flex items-center gap-2 rounded-2xl bg-neutral-900 p-2 border border-white/5 w-max mx-auto">
+          <button onClick={() => setActiveTab('staging')} className={`whitespace-nowrap px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'staging' ? 'bg-white text-black shadow-lg shadow-white/5' : 'text-neutral-500 hover:text-white'}`}>Triage</button>
+          <button onClick={() => setActiveTab('rolodex')} className={`whitespace-nowrap px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'rolodex' ? 'bg-white text-black shadow-lg shadow-white/5' : 'text-neutral-500 hover:text-white'}`}>Creators</button>
+          <button onClick={() => setActiveTab('fixer')} className={`whitespace-nowrap px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'fixer' ? 'bg-white text-black shadow-lg shadow-white/5' : 'text-neutral-500 hover:text-white'}`}>Live Fixer</button>
+          <button onClick={() => setActiveTab('prompts')} className={`whitespace-nowrap px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'prompts' ? 'bg-white text-black shadow-lg shadow-white/5' : 'text-neutral-500 hover:text-white'} flex items-center gap-2`}><Sparkles className="h-3 w-3" /> Prompt Forge</button>
+          <button onClick={() => setActiveTab('taxonomy')} className={`whitespace-nowrap px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'taxonomy' ? 'bg-white text-black shadow-lg shadow-white/5' : 'text-neutral-500 hover:text-white'} flex items-center gap-2`}><Database className="h-3 w-3" /> Taxonomy</button>
+          <button onClick={() => setActiveTab('manual')} className={`whitespace-nowrap px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'manual' ? 'bg-white text-black shadow-lg shadow-white/5' : 'text-neutral-500 hover:text-white'}`}>Manual</button>
+          <button onClick={() => setActiveTab('access')} className={`whitespace-nowrap px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'access' ? 'bg-white text-black shadow-lg shadow-white/5' : 'text-neutral-500 hover:text-white'} flex items-center gap-2`}><ShieldCheck className="h-3 w-3" /> Access</button>
+          <button onClick={() => setActiveTab('bulk')} className={`whitespace-nowrap px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'bulk' ? 'bg-white text-black shadow-lg shadow-white/5' : 'text-neutral-500 hover:text-white'} flex items-center gap-2`}><Upload className="h-3 w-3" /> Bulk Injector</button>
+          <button onClick={() => setActiveTab('audit')} className={`whitespace-nowrap px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'audit' ? 'bg-white text-black shadow-lg shadow-white/5' : 'text-neutral-500 hover:text-white'} flex items-center gap-2`}><History className="h-3 w-3" /> Audit Logs</button>
+        </div>
       </div>
 
       <AnimatePresence mode="wait">
@@ -496,7 +498,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     {trendingPrompts.map((p: TrendingPrompt) => (
                       <tr key={p.id} className="hover:bg-white/[0.02] transition-colors group">
                         <td className="px-10 py-6">
-                          {p.thumbnail ? (
+                          {p.thumbnail?.trim() ? (
                             <img src={p.thumbnail} className="h-14 w-24 rounded-xl border border-white/10 object-cover shadow-2xl" alt="" />
                           ) : (
                             <div className="h-14 w-24 rounded-xl border border-white/10 bg-zinc-900 flex items-center justify-center">
@@ -567,7 +569,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           </td>
                           <td className="px-8 py-6">
                             <div className="flex items-center gap-4">
-                              {creator?.profilePic ? (
+                              {creator?.profilePic?.trim() ? (
                                 <img src={creator.profilePic} className="h-10 w-10 rounded-full border border-white/10 grayscale group-hover:grayscale-0 transition-all object-cover" alt="" />
                               ) : (
                                 <div className="h-10 w-10 rounded-full border border-white/10 bg-zinc-900 flex items-center justify-center">
@@ -625,13 +627,14 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   <select value={newCreator.niche} onChange={e => setNewCreator({ ...newCreator, niche: e.target.value })} className="w-full bg-black border border-white/5 rounded-2xl p-5 text-xs font-black uppercase tracking-widest text-white focus:border-blue-500 outline-none appearance-none cursor-pointer">
                     {NICHES.map(n => <option key={n} value={n}>{n}</option>)}
                   </select>
+                  <textarea value={newCreator.bio || ''} onChange={e => setNewCreator({ ...newCreator, bio: e.target.value })} placeholder="Creator biography..." className="w-full bg-black border border-white/5 rounded-2xl p-5 text-sm font-bold text-white focus:border-blue-500 outline-none transition-all h-24 shadow-inner resize-none" />
                   <input value={newCreator.profilePic} onChange={e => setNewCreator({ ...newCreator, profilePic: e.target.value })} placeholder="Profile Pic URL" className="w-full bg-black border border-white/5 rounded-2xl p-5 text-sm font-bold text-white focus:border-blue-500 outline-none transition-all shadow-inner" />
                   <div className="flex items-center gap-4">
                     <label className="flex-none p-3 bg-white/5 rounded-xl cursor-pointer hover:bg-white/10 transition-colors">
                       <input type="file" className="hidden" accept="image/*" onChange={(e) => processFileUpload(e, 'avatars', (url) => setNewCreator({ ...newCreator, profilePic: url }))} />
                       <UserPlus className="h-4 w-4 text-neutral-400" />
                     </label>
-                    {newCreator.profilePic ? (
+                    {newCreator.profilePic?.trim() ? (
                       <div className="flex items-center gap-3">
                         <img src={newCreator.profilePic} className="h-10 w-10 rounded-full object-cover border border-white/10" alt="Preview" />
                         <p className="text-[10px] text-green-500 font-black uppercase tracking-wider">Image Loaded</p>
@@ -671,7 +674,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       <tr key={c.id} className={`hover:bg-white/[0.02] transition-colors group ${c.isHidden ? 'opacity-40 grayscale' : ''}`}>
                         <td className="px-10 py-6">
                           <div className="flex items-center gap-5">
-                            {c.profilePic ? (
+                            {c.profilePic?.trim() ? (
                               <img src={c.profilePic} className="h-12 w-12 rounded-full border border-white/10 object-cover shadow-2xl" alt="" />
                             ) : (
                               <div className="h-12 w-12 rounded-full bg-zinc-900 border border-white/10 flex items-center justify-center">
@@ -778,7 +781,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         </td>
                         <td className="px-10 py-7">
                           <div className="flex items-center gap-3">
-                            {creators.find(c => c.id === r.creatorId)?.profilePic ? (
+                            {creators.find(c => c.id === r.creatorId)?.profilePic?.trim() ? (
                               <img src={creators.find(c => c.id === r.creatorId)?.profilePic} className="h-8 w-8 rounded-full grayscale group-hover:grayscale-0 transition-all border border-white/10" alt="" />
                             ) : (
                               <div className="h-8 w-8 rounded-full border border-white/10 bg-zinc-900 flex items-center justify-center">
@@ -911,7 +914,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         <input type="file" className="hidden" accept="image/*" onChange={(e) => processFileUpload(e, 'thumbnails', (url) => setNewManualResource({ ...newManualResource, thumbnail: url }))} />
                         <Upload className="h-5 w-5 text-neutral-400" />
                       </label>
-                      {newManualResource.thumbnail ? (
+                      {newManualResource.thumbnail?.trim() ? (
                         <div className="flex items-center gap-4">
                           <img src={newManualResource.thumbnail} className="h-14 w-24 rounded-xl object-cover border border-white/10 shadow-2xl" alt="Preview" />
                           <div className="space-y-1">
@@ -1115,12 +1118,12 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         <input type="file" className="hidden" accept="image/*" onChange={(e) => processFileUpload(e, 'thumbnails', (url) => setEditingItem(prev => prev ? { ...prev, thumbnail: url } : null))} />
                         <ImageIcon className="h-4 w-4 text-neutral-400" />
                       </label>
-                      {editingItem!.thumbnail && (
-                        <div className="flex items-center gap-3">
+                      {editingItem!.thumbnail?.trim() ? (
+                        <div className="flex items-center gap-4">
                           <img src={editingItem!.thumbnail} className="h-12 w-20 rounded-lg object-cover border border-white/10" alt="Preview" />
                           <p className="text-[10px] text-green-500 font-black uppercase tracking-wider">Preview Ready</p>
                         </div>
-                      )}
+                      ) : null}
                     </div>
                   </div>
                 </div>
@@ -1232,13 +1235,13 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         <input type="file" className="hidden" accept="image/*" onChange={(e) => processFileUpload(e, 'avatars', (url) => setEditingCreator(prev => prev ? { ...prev, profilePic: url } : null))} />
                         <ImageIcon className="h-4 w-4 text-neutral-400" />
                       </label>
-                      {editingCreator.profilePic && (
+                      {editingCreator.profilePic?.trim() ? (
                         <div className="flex items-center gap-4">
                           <img src={editingCreator.profilePic} className="h-10 w-10 rounded-full object-cover border border-white/10" alt="Preview" />
                           <p className="text-[10px] text-green-500 font-black uppercase tracking-wider">Sync Successful</p>
                         </div>
-                      )}
-                      {isUploading && !editingCreator.profilePic && (
+                      ) : null}
+                      {isUploading && !editingCreator.profilePic?.trim() && (
                         <div className="flex flex-col gap-2">
                           <p className="text-[10px] text-neutral-500 uppercase font-black tracking-widest">Uploading Avatar...</p>
                           <div className="w-32 h-1 bg-white/5 rounded-full overflow-hidden">

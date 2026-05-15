@@ -94,7 +94,10 @@ export async function updateSession(request: NextRequest) {
             .single()
 
         if (profile?.role === 'admin') {
-            return NextResponse.redirect(new URL('/admin', request.url))
+            const hasAdminCookie = request.cookies.has('admin_resource_access');
+            if (hasAdminCookie) {
+                return NextResponse.redirect(new URL('/admin', request.url))
+            }
         }
     }
 

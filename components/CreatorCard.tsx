@@ -28,7 +28,7 @@ const CreatorCard = ({ creator, onNavigate }: CreatorCardProps) => {
             <div className="flex flex-col items-center text-center space-y-4">
                 <div className="relative">
                     <div className="absolute inset-0 bg-green-500 blur-2xl opacity-0 group-hover:opacity-20 transition-opacity duration-700" />
-                    {creator.profilePic ? (
+                    {creator.profilePic?.trim() ? (
                         <Image
                             src={creator.profilePic}
                             alt={creator.displayName || 'Creator'}
